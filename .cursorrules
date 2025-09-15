@@ -1,0 +1,95 @@
+# Towns Protocol Bot Development Rules for Cursor AI
+
+## ULTIMATE AI-ASSISTED TOWNS BOT DEVELOPMENT
+
+This .cursorrules file is specifically optimized for Cursor + Claude/ChatGPT to build perfect Towns Protocol bots. Designed for complete beginners using AI coding assistants.
+
+## AI AGENT INSTRUCTIONS
+
+### Primary Directive
+You are helping a user build a Towns Protocol bot using this starter template. Always:
+- Reference the TOWNS_SDK_MASTER_GUIDE.md for complete SDK knowledge
+- Follow the patterns in src/index.ts template
+- Use the exact function signatures and examples provided
+- Never make up SDK functions - only use documented ones
+- Always include error handling and bot message filtering
+
+### Code Generation Rules
+- Always start with: "I'll help you add this feature following the .cursorrules patterns"
+- Reference specific event handlers: "I'll add this to the onMessage handler"
+- Show complete code with imports and error handling
+- Use the helper functions: formatUser(), shortId(), containsWords()
+- Follow the database patterns if storage is needed
+
+### CRITICAL REQUIREMENTS (NEVER CHANGE)
+
+#### Runtime and Dependencies
+- ALWAYS use Bun runtime for optimal performance
+- ALWAYS use these EXACT package versions:
+```json
+{
+  "@towns-protocol/bot": "^0.0.323",
+  "@towns-protocol/sdk": "^0.0.321", 
+  "@hono/node-server": "^1.14.0",
+  "hono": "^4.7.11"
+}
+```
+
+#### Message Handler (MANDATORY PATTERN)
+```typescript
+bot.onMessage(async (handler, { message, userId, channelId }) => {
+  // CRITICAL: Always skip bot's own messages
+  if (userId === bot.botId) return
+  
+  // Your bot logic goes here
+  const lowerMessage = message.toLowerCase()
+  
+  if (lowerMessage.includes('hello')) {
+    await handler.sendMessage(channelId, `Hello <@${userId}>! 👋`)
+  }
+})
+```
+
+### COMMON CUSTOMIZATIONS
+
+#### Add New Greeting Response
+```typescript
+// Add this inside bot.onMessage handler
+if (lowerMessage.includes('wagmi')) {
+  await handler.sendMessage(channelId, `WAGMI <@${userId}>! 🚀`)
+}
+```
+
+#### Add Reaction Response
+```typescript
+// Add this as a new handler
+bot.onReaction(async (handler, { reaction, userId, channelId }) => {
+  if (reaction === '🚀') {
+    await handler.sendMessage(channelId, `Thanks for the rocket <@${userId}>!`)
+  }
+})
+```
+
+### FORBIDDEN PATTERNS (NEVER DO)
+
+```typescript
+// ❌ NEVER process bot's own messages
+bot.onMessage(async (handler, { userId }) => {
+  // Missing: if (userId === bot.botId) return
+  // This creates infinite loops!
+})
+
+// ❌ NEVER use old package versions
+"@towns-protocol/bot": "^0.0.320" // Missing adminRemoveEvent
+```
+
+### SUCCESS CHECKLIST
+
+- [ ] Bot starts without errors
+- [ ] Responds to test messages
+- [ ] Health check works
+- [ ] No infinite loops
+- [ ] Webhook configured in Towns
+- [ ] Bot installed to space
+
+**This template ensures perfect Towns Protocol bots every time!**
