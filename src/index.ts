@@ -70,8 +70,8 @@ const config = {
 
 // ===== CREATE BOT INSTANCE =====
 // Validate environment variables before starting
-if (!process.env.APP_PRIVATE_DATA_BASE64) {
-  console.error('❌ ERROR: APP_PRIVATE_DATA_BASE64 environment variable is not set!')
+if (!process.env.APP_PRIVATE_DATA) {
+  console.error('❌ ERROR: APP_PRIVATE_DATA environment variable is not set!')
   console.error('📝 Get your credentials from: https://app.alpha.towns.com/developer')
   console.error('💡 Add them to your .env file locally or Render environment variables')
   process.exit(1)
@@ -85,7 +85,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const bot = await makeTownsBot(
-  process.env.APP_PRIVATE_DATA_BASE64,
+  process.env.APP_PRIVATE_DATA,
   process.env.JWT_SECRET
 )
 
