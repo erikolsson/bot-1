@@ -1,7 +1,7 @@
 {
   "name": "simple-towns-bot-starter",
   "version": "1.0.0",
-  "description": "Simple Towns Protocol bot starter template - Perfect for beginners",
+  "description": "Secret Word Hunt Bot - Towns Protocol",
   "type": "module",
   "main": "dist/index.mjs",
   "scripts": {

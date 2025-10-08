@@ -1,26 +1,68 @@
-# 🤖 Ultimate Towns Protocol Bot Starter Template
-**Zero to Running Bot in 30 Minutes Using AI - No Coding Experience Required**
+# 🔍 Secret Word Hunt Bot - Towns Protocol
+**Gamified Community Engagement Through Word Discovery**
 
-This is the **PERFECT foundation** for building Towns Protocol bots with AI assistance. The template includes ALL SDK functions, complete documentation, and is specifically designed for Cursor + Claude/ChatGPT development.
+Create an exciting treasure hunt experience in your Towns community! Hide a secret word and watch as members hunt for it to win prizes. Perfect for boosting engagement and rewarding active community members.
 
-## 🎯 What This Template Provides
+## 🎯 What This Bot Does
 
-### Complete Bot Foundation
-- 🤖 **All Towns SDK imports** - Every function ready to use
-- 📚 **Complete knowledge base** - All functions documented for AI
-- 🔧 **Helper functions** - formatUser, shortId, containsWords
-- 🗄️ **Database patterns** - SQLite examples ready to uncomment
-- ⚡ **Production patterns** - Based on working bots
+### Core Features
+- 🔍 **Secret Word Detection** - Automatically detects when users say the magic word
+- 🎁 **Prize Management** - Admins can set custom prizes and congratulations messages
+- 🏆 **Winner Tracking** - Each user can only win once (anti-spam protection)
+- 👑 **Admin System** - Secure admin commands for game management
+- 📊 **Status Dashboard** - Track game configuration and winner count
+- 🗄️ **Database Storage** - SQLite database for persistent data
 
-### AI Will Help You Build
-- 🌅 **Greeting bots** - GM, hello, welcome responses
-- 🤖 **Command bots** - @bot help, @bot stats, custom commands  
-- 🛡️ **Moderation bots** - Delete bad messages, user verification
-- 📊 **Analytics bots** - User stats, leaderboards, tracking
-- 🎮 **Interactive bots** - Games, polls, reactions, points systems
-- 🔔 **Utility bots** - Scheduled messages, notifications, integrations
+### Admin Commands
+- `/addadmin @user` - Add a new admin (first user becomes admin automatically)
+- `/setword <word>` - Set the secret word users need to find
+- `/setprize <description>` - Set the prize description
+- `/setdescription <message>` - Customize the congratulations message
+- `/status` - View current game configuration and winner count
 
-**Perfect foundation for AI agents to build ANY type of sophisticated bot!**
+### User Experience
+- 🎮 **Simple Gameplay** - Just chat naturally and discover the word
+- 🎉 **Instant Rewards** - Automatic detection and congratulations
+- 📱 **Welcome Messages** - New users are greeted with hunt information
+- 💡 **Help Command** - @bot help explains how to play
+
+**Perfect for community engagement, member rewards, and gamification!**
+
+## 🚀 Quick Start Guide
+
+### 1. Setup Bot (5 minutes)
+```bash
+# Install dependencies
+bun install
+
+# Create .env file
+cp .env.sample .env
+# Then edit .env with your bot credentials from Towns Developer Portal
+```
+
+### 2. Run Locally (1 minute)
+```bash
+bun run dev
+```
+
+### 3. Setup First Admin (In your Towns space)
+```
+/addadmin
+```
+This makes YOU the first admin! 🎉
+
+### 4. Configure the Hunt
+```
+/setword treasure
+/setprize 100 USDC
+/setdescription Congrats! You found it!
+/status
+```
+
+### 5. Start the Hunt! 🏁
+Your community members will now hunt for the word "treasure"!
+
+---
 
 ## 🛠️ Prerequisites (10 minutes) - CRITICAL SETUP
 
@@ -205,110 +247,121 @@ git push -u origin main
 3. **Find your bot** and click **"Install"**
 4. **Test it**: Say "GM" in the channel!
 
-**If your bot starts without errors - SUCCESS!** 🎉 (The bot won't respond to anything yet - that's what AI will help you build!)
+**If your bot starts without errors - SUCCESS!** 🎉
 
 ---
 
-## 🤖 AI Customization Guide - The Magic Happens Here!
+## 🎮 Example Usage Scenario
 
-### Copy-Paste AI Prompts (Use in Cursor/Claude/ChatGPT)
-
-#### 🌅 Start with Simple Greeting Bot (Perfect First Project)
+### Admin Sets Up the Hunt
 ```
-"Make the bot respond to 'gm' or 'good morning' with 'GM @user! ☀️'. Use the onMessage handler and follow the .cursorrules patterns."
+Admin: /setword moonshot
+Bot: ✅ Secret word set! Users can now hunt for it! 🔍
 
-"Add a response when someone says 'hello', 'hi', or 'hey' with 'Hello @user! 👋'. Show me the complete code."
+Admin: /setprize 50 USDC
+Bot: ✅ Prize set to: 50 USDC
 
-"Make the bot welcome new users when they join with '🎉 Welcome @user! Say GM to test the bot!'. Use the onChannelJoin handler."
+Admin: /setdescription Amazing! You discovered the moonshot word! 🚀
+Bot: ✅ Congratulations message set!
 
-"Add a @bot help command that explains what the bot does. Use the onMentioned handler pattern."
-```
+Admin: /status
+Bot: 📊 Secret Word Hunt Status
 
-#### ⚡ Add Interactive Features
-```
-"Make the bot react with 🚀 emoji when someone mentions 'moon' or 'rocket'. Use the sendReaction function."
+🔑 Secret Word: moonshot
+🎁 Prize: 50 USDC
+💬 Message: Amazing! You discovered the moonshot word! 🚀
+🏆 Winners: 0
 
-"Add a @bot joke command that tells random programming jokes. Show me how to add this to the onMentioned handler."
-
-"Create a points system where users earn points for saying GM. Add database storage using bun:sqlite patterns from the template."
-
-"Make the bot respond differently based on time of day - 'Good morning' before noon, 'Good evening' after 6 PM."
+✅ Game is ready!
 ```
 
-#### 🛡️ Add Moderation Features
+### User Discovers the Word
 ```
-"Add simple moderation - delete messages containing specific bad words and send warnings. Use adminRemoveEvent function and follow .cursorrules."
+User: I think this project is going to moonshot! 🚀
+Bot: 🎊 WINNER! @User
 
-"Create a user verification system where new users must react with ✅ to welcome messages before chatting. Use reaction handler."
+Amazing! You discovered the moonshot word! 🚀
 
-"Add rate limiting - warn users who send too many messages too quickly. Track messages in database."
+🎁 Your Prize: 50 USDC
 
-"Make the bot delete messages with suspicious links and send safety warnings."
-```
-
-#### 📊 Add Analytics and Stats
-```
-"Add a database to track user activity (messages, reactions, join dates). Use the bun:sqlite patterns in the template comments."
-
-"Create a @bot stats command that shows community statistics - active users, total messages, top contributors."
-
-"Add a leaderboard system where users earn points for activity and can check rankings with @bot leaderboard."
-
-"Track which commands are used most and show analytics to space owners."
+✨ An admin will now tip you your prize!
 ```
 
-#### Database Features
+### New Users Join
 ```
-"Add a SQLite database using bun:sqlite to track how many times each user says GM. Add a @bot stats command. Follow .cursorrules patterns."
+Bot: 🎉 Welcome @NewUser! 
 
-"Create a points system where users earn points for saying GM. Add leaderboard commands with database storage."
+There's a secret word hidden somewhere in this server... Find it and win a prize! 🎁
+
+Mention me with "help" to learn more! 🔍
 ```
-
-#### Moderation Features
-```
-"Add simple moderation - delete messages containing specific bad words and send short warnings. Use adminRemoveEvent following .cursorrules."
-
-"Add user verification system where new users must react with ✅ to a welcome message before they can chat."
-```
-
-### 🎯 How to Use Cursor + AI (Step-by-Step)
-
-#### 1. Open Project in Cursor
-- **Open Cursor** application
-- **File** → **Open Folder** → Select your bot project folder
-- **Wait** for Cursor to load the project
-
-#### 2. Start AI Chat
-- **Press `Cmd+K` (Mac) or `Ctrl+K` (Windows)**
-- **Or click** the AI chat icon in sidebar
-
-#### 3. Use Perfect AI Prompts
-- **Copy a prompt** from the examples above
-- **Paste into AI chat**
-- **Always add**: "Follow the .cursorrules and keep existing functionality"
-- **Press Enter** and watch AI write perfect code!
-
-#### 4. Apply AI Changes
-- **Review the code** AI suggests
-- **Click "Apply"** if it looks good
-- **Test locally**: `bun run dev`
-- **Commit changes**: `git add . && git commit -m "Add feature"`
-
-### 🧠 AI Coding Tips for Best Results
-
-1. **Always mention .cursorrules**: "Follow the .cursorrules for Towns Protocol best practices"
-2. **Reference the template**: "Use the event handler patterns from src/index.ts"
-3. **Keep existing code**: "Don't change the basic bot setup, just add this feature"
-4. **Ask for complete examples**: "Show me the complete function with error handling"
-5. **Test incrementally**: "Add this feature but keep all existing functionality working"
-6. **Use the knowledge base**: "Reference the function examples in the template comments"
-7. **Be specific**: "Add this to the onMessage handler" instead of "add message handling"
 
 ---
 
-## 📚 COMPLETE TOWNS PROTOCOL KNOWLEDGE BASE FOR AI
+## 🤖 Bot Architecture & Database
 
-*This section contains everything your AI assistant needs to build perfect bots*
+### Database Schema
+The bot uses SQLite (bun:sqlite) with three tables:
+
+#### 1. `secret_config` - Game Configuration
+```sql
+CREATE TABLE secret_config (
+  space_id TEXT PRIMARY KEY,
+  secret_word TEXT,
+  prize TEXT,
+  description TEXT,
+  created_at INTEGER
+)
+```
+Stores the secret word, prize, and congratulations message per space.
+
+#### 2. `winners` - Winner Tracking
+```sql
+CREATE TABLE winners (
+  user_id TEXT,
+  space_id TEXT,
+  found_at INTEGER,
+  PRIMARY KEY (user_id, space_id)
+)
+```
+Tracks which users have already won (prevents duplicate wins).
+
+#### 3. `admins` - Admin Management
+```sql
+CREATE TABLE admins (
+  user_id TEXT,
+  space_id TEXT,
+  added_at INTEGER,
+  PRIMARY KEY (user_id, space_id)
+)
+```
+Stores admin permissions per space.
+
+### Bot Logic Flow
+
+#### Message Processing
+1. **Bot Message Filter** - Skip bot's own messages
+2. **Admin Command Detection** - Check for `/` commands
+3. **Permission Check** - Verify user is admin for admin commands
+4. **Secret Word Detection** - Check if message contains secret word
+5. **Winner Check** - Verify user hasn't already won
+6. **Winner Recording** - Store winner and send congratulations
+
+#### Event Handlers
+- `onMessage` - Main handler for commands and word detection
+- `onMentioned` - Help system with context-aware responses
+- `onChannelJoin` - Welcome new users with hunt information
+
+### Security Features
+- ✅ Admin-only commands with permission checks
+- ✅ One win per user (anti-spam protection)
+- ✅ Per-space configuration (multi-space support)
+- ✅ Database constraints prevent duplicates
+- ✅ Error handling on all operations
+
+---
+
+## 📚 Technical Documentation
 
 ### 🎯 ALL Available Event Handlers
 
@@ -417,37 +470,70 @@ Line 3`
 - Always use environment variables for credentials
 - Test locally before deploying
 
-## Success Checklist
+## ✅ Success Checklist
 
-### Local Development ✅
-- [ ] Bun installed and working
-- [ ] Bot credentials added to .env
-- [ ] Bot starts without errors
-- [ ] Health check responds
-- [ ] Bot responds to "GM" locally
+### Local Development
+- [ ] Bun installed and working (`bun --version`)
+- [ ] Bot credentials added to `.env`
+- [ ] Bot starts without errors (`bun run dev`)
+- [ ] Health check responds (http://localhost:5123/health)
+- [ ] Database tables created (`bot.db` file exists)
 
-### Production Deployment ✅  
-- [ ] GitHub repository created
-- [ ] Render service deployed
-- [ ] Environment variables configured
-- [ ] Webhook URL configured in Towns
+### Production Deployment
+- [ ] GitHub repository created and pushed
+- [ ] Render service deployed successfully
+- [ ] Environment variables configured in Render
+- [ ] Webhook URL configured in Towns (`/webhook` endpoint)
 - [ ] Bot installed to Towns space
-- [ ] Bot responds in production
+- [ ] Bot online and responsive
 
-### AI Customization Ready ✅
-- [ ] Cursor installed and project opened
-- [ ] .cursorrules file present
-- [ ] AI prompts ready to use
-- [ ] Understanding of bot structure
+### Game Configuration
+- [ ] First admin set up (`/addadmin` command used)
+- [ ] Secret word configured (`/setword` command)
+- [ ] Prize description set (`/setprize` command)
+- [ ] Congratulations message set (`/setdescription` command)
+- [ ] Status checked (`/status` shows all configuration)
 
-**Once all ✅ - you have a working Towns Protocol bot ready for unlimited customization!**
+### Testing & Verification
+- [ ] Test message with secret word triggers win
+- [ ] Winner receives congratulations message
+- [ ] Duplicate win attempt blocked (same user tries again)
+- [ ] New users receive welcome message
+- [ ] Help command works (`@bot help`)
+- [ ] Admin commands work correctly
 
-## What's Next?
+**Once all ✅ - your Secret Word Hunt is ready to engage your community!**
 
-1. **Test your bot** - Say "GM" in your Towns space
-2. **Open in Cursor** - Start AI-assisted customization
-3. **Use AI prompts** - Add features easily
-4. **Deploy changes** - Git push auto-deploys
-5. **Build your community** - Share your awesome bot!
+## 🎯 Tips for Running a Successful Hunt
 
-**Welcome to the future of bot development with Towns Protocol! 🚀**
+### Strategy Ideas
+1. **Hide Hints** - Drop hints in announcements or pinned messages
+2. **Time-Limited** - Create urgency with limited-time hunts
+3. **Multiple Rounds** - Reset the word weekly for ongoing engagement
+4. **Varied Prizes** - Mix token rewards with NFTs, roles, or access
+5. **Community Clues** - Let previous winners give hints to others
+
+### Best Practices
+- 🎪 **Announce the hunt** - Build excitement before starting
+- 🔄 **Rotate words** - Keep it fresh with new challenges
+- 💰 **Fair prizes** - Make rewards worth the effort
+- 📊 **Track engagement** - Use `/status` to see participation
+- 🎉 **Celebrate winners** - Make winning feel special
+
+## 🚀 What's Next?
+
+### For Admins
+1. **Set up your first hunt** - Use the quick start commands
+2. **Promote the game** - Announce in your space
+3. **Monitor winners** - Check `/status` regularly
+4. **Reward winners** - Tip prizes promptly
+5. **Start new rounds** - Keep the community engaged
+
+### For Developers
+1. **Customize messages** - Edit congratulations text
+2. **Add features** - Use AI to extend functionality
+3. **Integrate rewards** - Auto-tip winners (advanced)
+4. **Multi-space support** - Deploy to multiple communities
+5. **Analytics** - Track engagement metrics
+
+**Welcome to gamified community engagement with Towns Protocol! 🎮✨**
