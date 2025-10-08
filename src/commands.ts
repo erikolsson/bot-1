@@ -1,28 +1,25 @@
 /**
  * Bot Commands Configuration
- * Defines available slash commands for the Secret Word Hunt Bot
+ * 
+ * CRITICAL: Commands must be registered for webhook verification to succeed!
+ * 
+ * Define your bot's slash commands here. These will appear in the Towns UI
+ * and are REQUIRED for the webhook handshake to work properly.
  */
 
 export default [
   {
-    name: 'addadmin',
-    description: 'Add a new admin (first user becomes admin automatically)',
+    name: 'help',
+    description: 'Show bot help and available features',
   },
   {
-    name: 'setword',
-    description: 'Set the secret word that users need to find',
+    name: 'info',
+    description: 'Display bot information',
   },
-  {
-    name: 'setprize',
-    description: 'Set the prize description for winners',
-  },
-  {
-    name: 'setdescription',
-    description: 'Set the congratulations message for winners',
-  },
-  {
-    name: 'status',
-    description: 'View current game configuration and winner count (admin only)',
-  },
+  // Add your custom commands here
+  // {
+  //   name: 'stats',
+  //   description: 'Show server statistics',
+  // },
 ];
 

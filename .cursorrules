@@ -1,95 +1,226 @@
-# Towns Protocol Bot Development Rules for Cursor AI
+# Towns Protocol Bot Development Rules
+**SDK v0.0.364 | Production Patterns | Render Deployment**
 
-## ULTIMATE AI-ASSISTED TOWNS BOT DEVELOPMENT
+## AI Instructions
 
-This .cursorrules file is specifically optimized for Cursor + Claude/ChatGPT to build perfect Towns Protocol bots. Designed for complete beginners using AI coding assistants.
+When building Towns Protocol bots, follow this EXACT order:
 
-## AI AGENT INSTRUCTIONS
+### Step 1: Environment Setup (FIRST!)
 
-### Primary Directive
-You are helping a user build a Towns Protocol bot using this starter template. Always:
-- Reference the TOWNS_SDK_MASTER_GUIDE.md for complete SDK knowledge
-- Follow the patterns in src/index.ts template
-- Use the exact function signatures and examples provided
-- Never make up SDK functions - only use documented ones
-- Always include error handling and bot message filtering
+**Install Bun:**
+```bash
+# Check if Bun is installed
+bun --version
 
-### Code Generation Rules
-- Always start with: "I'll help you add this feature following the .cursorrules patterns"
-- Reference specific event handlers: "I'll add this to the onMessage handler"
-- Show complete code with imports and error handling
-- Use the helper functions: formatUser(), shortId(), containsWords()
-- Follow the database patterns if storage is needed
+# If not installed, run:
+curl -fsSL https://bun.sh/install | bash
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+```
 
-### CRITICAL REQUIREMENTS (NEVER CHANGE)
+**Check SDK Versions:**
+```bash
+# Check current vs latest
+npm run check-versions
 
-#### Runtime and Dependencies
-- ALWAYS use Bun runtime for optimal performance
-- ALWAYS use these EXACT package versions:
+# If updates available, run:
+npm run update-sdk
+```
+
+**Install Dependencies:**
+```bash
+bun install
+```
+
+### Step 2: Verify Required Files
+
+**Must exist:**
+- `src/index.ts` - Main bot code
+- `src/commands.ts` - Command definitions
+- `package.json` - Dependencies
+- `.env.sample` - Environment template
+- `tsconfig.json` - TypeScript config
+- `esbuild.config.mjs` - Build config
+
+**Check package.json has:**
 ```json
 {
-  "@towns-protocol/bot": "^0.0.323",
-  "@towns-protocol/sdk": "^0.0.321", 
+  "@towns-protocol/bot": "^0.0.364",
+  "@towns-protocol/sdk": "^0.0.364",
   "@hono/node-server": "^1.14.0",
   "hono": "^4.7.11"
 }
 ```
 
-#### Message Handler (MANDATORY PATTERN)
+### Step 3: Required Code Patterns
+
+**src/commands.ts (MUST exist for webhooks!):**
 ```typescript
-bot.onMessage(async (handler, { message, userId, channelId }) => {
-  // CRITICAL: Always skip bot's own messages
+export default [
+  { name: 'help', description: 'Show help' },
+]
+```
+
+**src/index.ts initialization:**
+```typescript
+import { makeTownsBot } from '@towns-protocol/bot'
+import { serve } from '@hono/node-server'
+import { Hono } from 'hono'
+import commands from './commands.js'
+
+// STEP 1: Validate environment
+if (!process.env.APP_PRIVATE_DATA || !process.env.JWT_SECRET) {
+  console.error('❌ Missing credentials!')
+  process.exit(1)
+}
+
+// STEP 2: Create bot with commands
+const bot = await makeTownsBot(
+  process.env.APP_PRIVATE_DATA.trim(),
+  process.env.JWT_SECRET,
+  { commands } as any
+)
+
+// STEP 3: Message handler
+bot.onMessage(async (handler, event) => {
+  const { message, userId, channelId, isMentioned } = event
+  
   if (userId === bot.botId) return
   
-  // Your bot logic goes here
-  const lowerMessage = message.toLowerCase()
+  try {
+    if (isMentioned) {
+      await handler.sendMessage(channelId, "Hello!")
+      return
+    }
+    
+    // Your logic here
+    
+  } catch (error) {
+    console.error('Error:', error)
+  }
+})
+
+// STEP 4: Server setup
+const { jwtMiddleware, handler } = await bot.start()
+const app = new Hono()
+app.post('/webhook', jwtMiddleware, handler)
+app.get('/health', (c) => c.json({ status: 'ok', botId: bot.botId }))
+
+serve({ fetch: app.fetch, port: Number(process.env.PORT || 5123) })
+```
+
+### Step 4: Build & Test
+
+```bash
+# Build
+bun run build
+
+# Verify dist/index.mjs exists
+ls -la dist/
+
+# Test build (only if .env configured)
+# bun run start
+```
+
+### Step 5: Deploy to Render
+
+**Render Configuration:**
+1. Build Command: `bun install && bun run build`
+2. Start Command: `bun run start`
+3. Environment Variables:
+   - `APP_PRIVATE_DATA` = [from Towns Portal]
+   - `JWT_SECRET` = [from Towns Portal]
+   - `PORT` = `5123`
+
+**Deployment Order (CRITICAL!):**
+1. Push code to GitHub
+2. Create Render service
+3. Add environment variables
+4. Wait for "Your service is live 🎉"
+5. THEN set webhook in Towns Portal
+6. Webhook URL: `https://your-app.onrender.com/webhook`
+
+### Step 6: Towns Integration
+
+**After Render is running:**
+1. Go to https://app.alpha.towns.com/developer
+2. Your bot → Settings
+3. Webhook URL: `https://your-app.onrender.com/webhook`
+4. Enable: All Messages, Mentions, Replies
+5. Save (webhook verification happens now)
+
+---
+
+## Required Patterns
+
+### Bot Message Filtering (CRITICAL!)
+```typescript
+bot.onMessage(async (handler, event) => {
+  if (event.userId === bot.botId) return // Prevents infinite loops!
+  // ... rest of code
+})
+```
+
+### Mention Handling
+```typescript
+bot.onMessage(async (handler, event) => {
+  const { isMentioned, message, channelId } = event
   
-  if (lowerMessage.includes('hello')) {
-    await handler.sendMessage(channelId, `Hello <@${userId}>! 👋`)
+  if (event.userId === bot.botId) return
+  
+  if (isMentioned) {
+    // Handle @bot mentions
+    await handler.sendMessage(channelId, "Response")
+    return
   }
 })
 ```
 
-### COMMON CUSTOMIZATIONS
-
-#### Add New Greeting Response
+### Database (if needed)
 ```typescript
-// Add this inside bot.onMessage handler
-if (lowerMessage.includes('wagmi')) {
-  await handler.sendMessage(channelId, `WAGMI <@${userId}>! 🚀`)
+import { Database } from 'bun:sqlite'
+
+const db = new Database('bot.db')
+db.run(`CREATE TABLE IF NOT EXISTS users (...)`) // Use .run() NOT .exec()
+db.run('INSERT INTO users VALUES (?, ?)', [userId, data])
+const user = db.query('SELECT * FROM users WHERE user_id = ?').get(userId)
+```
+
+### Error Handling
+```typescript
+try {
+  // Handler code
+} catch (error) {
+  console.error('Error:', error)
 }
 ```
 
-#### Add Reaction Response
-```typescript
-// Add this as a new handler
-bot.onReaction(async (handler, { reaction, userId, channelId }) => {
-  if (reaction === '🚀') {
-    await handler.sendMessage(channelId, `Thanks for the rocket <@${userId}>!`)
-  }
-})
-```
+---
 
-### FORBIDDEN PATTERNS (NEVER DO)
+## Common Errors
 
-```typescript
-// ❌ NEVER process bot's own messages
-bot.onMessage(async (handler, { userId }) => {
-  // Missing: if (userId === bot.botId) return
-  // This creates infinite loops!
-})
+| Error | Fix |
+|-------|-----|
+| premature EOF | APP_PRIVATE_DATA incomplete - re-copy full key |
+| CANNOT_CALL_WEBHOOK | Missing `{ commands } as any` in makeTownsBot |
+| Property 'onMentioned' does not exist | Use `isMentioned` in onMessage |
+| db.exec is deprecated | Use `db.run()` instead |
 
-// ❌ NEVER use old package versions
-"@towns-protocol/bot": "^0.0.320" // Missing adminRemoveEvent
-```
+---
 
-### SUCCESS CHECKLIST
+## File Checklist
 
-- [ ] Bot starts without errors
-- [ ] Responds to test messages
-- [ ] Health check works
-- [ ] No infinite loops
-- [ ] Webhook configured in Towns
-- [ ] Bot installed to space
+Before deployment, verify:
+- [ ] `src/commands.ts` exists
+- [ ] Commands imported in `src/index.ts`
+- [ ] Bot init has `{ commands } as any`
+- [ ] Environment validation exists
+- [ ] All handlers have `if (userId === bot.botId) return`
+- [ ] All handlers have try-catch
+- [ ] Database uses `db.run()` not `db.exec()`
+- [ ] Build succeeds: `bun run build`
+- [ ] `dist/index.mjs` exists after build
 
-**This template ensures perfect Towns Protocol bots every time!**
+---
+
+**Reference:** COMPLETE_KNOWLEDGE_BASE.md for all patterns and deployment steps.

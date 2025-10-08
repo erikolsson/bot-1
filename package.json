@@ -1,14 +1,18 @@
 {
-  "name": "simple-towns-bot-starter",
-  "version": "1.0.0",
-  "description": "Secret Word Hunt Bot - Towns Protocol",
+  "name": "towns-bot-vibecoding-starter",
+  "version": "2.0.0",
+  "description": "Ultimate Towns Protocol Bot Starter - SDK v0.0.364 - Production Ready",
   "type": "module",
   "main": "dist/index.mjs",
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "build": "tsc --noEmit && node ./esbuild.config.mjs",
     "start": "bun run dist/index.mjs",
-    "render:build": "bun install && bun run build"
+    "render:build": "bun install && bun run build",
+    "check-versions": "./check-versions.sh",
+    "update-sdk": "bun update @towns-protocol/bot @towns-protocol/sdk && bun install",
+    "setup": "./check-versions.sh && bun install",
+    "deploy": "bun run build && echo '✅ Ready for Render deployment'"
   },
   "dependencies": {
     "@towns-protocol/bot": "^0.0.364",
