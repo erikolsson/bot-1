@@ -299,6 +299,26 @@ bot.onMessageEdit(async (handler, { refEventId, message, userId, channelId, spac
  * "Make the bot participate in thread conversations"
  * "Add context-aware responses in threads"
  */
+bot.onThreadMessage(async (handler, { threadId, message, userId, channelId, spaceId, eventId }) => {
+  if (userId === bot.botId) return
+  
+  console.log(`🧵 Thread message from ${userId.slice(0, 8)}... in thread ${threadId.slice(0, 8)}...`)
+  
+  // ===== ADD YOUR CUSTOM THREAD LOGIC HERE =====
+  // AI EXAMPLES:
+  // Respond in threads with context
+  // await handler.sendMessage(channelId, "Thread response", { threadId })
+})
+
+/**
+ * 📢 THREAD MENTION HANDLER - Triggered when @bot is mentioned in threads
+ */
+bot.onMentionedInThread(async (handler, { threadId, message, userId, channelId, spaceId, eventId }) => {
+  console.log(`📢 Bot mentioned in thread by ${userId.slice(0, 8)}...`)
+  
+  // Respond in the thread
+  await handler.sendMessage(channelId, `Hello <@${userId}>! 👋`, { threadId })
+})
 
 // ===== ADDITIONAL EVENT HANDLERS (uncomment to use) =====
 

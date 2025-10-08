@@ -11,8 +11,8 @@
     "render:build": "bun install && bun run build"
   },
   "dependencies": {
-    "@towns-protocol/bot": "^0.0.323",
-    "@towns-protocol/sdk": "^0.0.321",
+    "@towns-protocol/bot": "^0.0.364",
+    "@towns-protocol/sdk": "^0.0.364",
     "@hono/node-server": "^1.14.0",
     "hono": "^4.7.11"
   },
