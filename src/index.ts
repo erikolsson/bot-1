@@ -84,10 +84,33 @@ if (!process.env.JWT_SECRET) {
   process.exit(1)
 }
 
-const bot = await makeTownsBot(
-  process.env.APP_PRIVATE_DATA,
-  process.env.JWT_SECRET
-)
+// Clean and validate the private key (remove any whitespace/newlines)
+const cleanPrivateKey = process.env.APP_PRIVATE_DATA.trim()
+
+console.log(`🔑 Validating credentials...`)
+console.log(`   Private key length: ${cleanPrivateKey.length} characters`)
+console.log(`   First 20 chars: ${cleanPrivateKey.substring(0, 20)}...`)
+
+let bot
+try {
+  bot = await makeTownsBot(
+    cleanPrivateKey,
+    process.env.JWT_SECRET
+  )
+} catch (error: any) {
+  console.error('\n❌ ERROR: Failed to initialize bot!')
+  console.error('📝 This usually means your APP_PRIVATE_DATA is:')
+  console.error('   • Incomplete (copy-paste was cut off)')
+  console.error('   • Has extra spaces or newlines')
+  console.error('   • Wrong format or corrupted')
+  console.error('\n💡 Solution:')
+  console.error('   1. Go to https://app.alpha.towns.com/developer')
+  console.error('   2. Copy the ENTIRE APP_PRIVATE_DATA value')
+  console.error('   3. Make sure NO spaces/newlines at start or end')
+  console.error('   4. Paste it into Render environment variables')
+  console.error(`\n🔍 Error details: ${error?.message || error}`)
+  process.exit(1)
+}
 
 console.log('🔍 Secret Word Hunt Bot starting...')
 console.log('🎯 Bot ID:', bot.botId)
