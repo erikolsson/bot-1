@@ -24,6 +24,9 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { Database } from 'bun:sqlite'
 
+// ===== BOT COMMANDS =====
+import commands from './commands.js'
+
 // ===== OPTIONAL IMPORTS (uncomment as needed) =====
 // import { readFileSync } from 'fs'           // For reading files
 // import { join } from 'path'                 // For file paths
@@ -95,7 +98,8 @@ let bot
 try {
   bot = await makeTownsBot(
     cleanPrivateKey,
-    process.env.JWT_SECRET
+    process.env.JWT_SECRET,
+    { commands } as any // TypeScript types don't include commands, but it's supported
   )
 } catch (error: any) {
   console.error('\n❌ ERROR: Failed to initialize bot!')
@@ -631,6 +635,15 @@ const { jwtMiddleware, handler } = await bot.start()
 
 const app = new Hono()
 
+// Add request logging middleware
+app.use('*', async (c, next) => {
+  const start = Date.now()
+  console.log(`📥 ${c.req.method} ${c.req.path}`)
+  await next()
+  const ms = Date.now() - start
+  console.log(`✅ ${c.req.method} ${c.req.path} - ${ms}ms - Status: ${c.res.status}`)
+})
+
 // Webhook endpoint for Towns Protocol
 app.post('/webhook', jwtMiddleware, handler)
 
@@ -640,7 +653,19 @@ app.get('/health', (c) => c.json({
   bot: 'Secret Word Hunt Bot',
   timestamp: Date.now(),
   version: '1.0.0',
-  features: ['secret_word_hunt', 'admin_commands', 'winner_tracking']
+  features: ['secret_word_hunt', 'admin_commands', 'winner_tracking'],
+  botId: bot.botId
+}))
+
+// Root endpoint for testing
+app.get('/', (c) => c.json({ 
+  bot: 'Secret Word Hunt Bot',
+  status: 'running',
+  botId: bot.botId,
+  endpoints: {
+    webhook: '/webhook (POST)',
+    health: '/health (GET)'
+  }
 }))
 
 // Start server
