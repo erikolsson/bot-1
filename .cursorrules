@@ -1,5 +1,5 @@
 # Towns Protocol Bot Development Rules
-**SDK v0.0.364 | Production Patterns | Render Deployment**
+**SDK v0.0.367 | Production Patterns | Render Deployment**
 
 ## AI Instructions
 
@@ -45,8 +45,8 @@ bun install
 **Check package.json has:**
 ```json
 {
-  "@towns-protocol/bot": "^0.0.364",
-  "@towns-protocol/sdk": "^0.0.364",
+  "@towns-protocol/bot": "0.0.367",
+  "@towns-protocol/sdk": "0.0.367",
   "@hono/node-server": "^1.14.0",
   "hono": "^4.7.11"
 }
@@ -60,6 +60,20 @@ export default [
   { name: 'help', description: 'Show help' },
 ]
 ```
+
+**Image Attachments (SDK v0.0.367):**
+```typescript
+await handler.sendMessage(channelId, "Here's an image", {
+  attachments: [
+    {
+      type: 'image',
+      url: 'https://example.com/cat.png',
+      alt: 'Cute cat', // optional but recommended
+    },
+  ],
+})
+```
+> The framework fetches the URL, validates the MIME type, measures image dimensions, and encrypts the payload automatically. Invalid URLs or non-image responses are skipped gracefully and logged.
 
 **src/index.ts initialization:**
 ```typescript

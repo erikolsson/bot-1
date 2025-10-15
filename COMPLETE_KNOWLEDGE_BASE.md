@@ -1,5 +1,7 @@
 # Towns Protocol Bot Development Guide
-**SDK v0.0.364 | Production-Tested | AI-Optimized**
+**Latest SDK | Production-Tested | AI-Optimized**
+
+> **💡 Keep your SDK current:** Run `bun run check-versions` to see if updates are available, then `bun run update-sdk` to get the latest features.
 
 ## Getting Bot Credentials
 
@@ -94,11 +96,23 @@ Value: 5123
 
 ---
 
-## Package Versions (Verified)
+## Package Management
+
+**Check for updates:**
+```bash
+bun run check-versions
+```
+
+**Update to latest:**
+```bash
+bun run update-sdk
+```
+
+**Current dependencies:**
 ```json
 {
-  "@towns-protocol/bot": "^0.0.364",
-  "@towns-protocol/sdk": "^0.0.364",
+  "@towns-protocol/bot": "latest",
+  "@towns-protocol/sdk": "latest",
   "@hono/node-server": "^1.14.0",
   "hono": "^4.7.11"
 }
@@ -149,21 +163,23 @@ export default [
 ```typescript
 // Primary Handlers
 bot.onMessage()           // All messages (use this)
+bot.onSlashCommand()      // Slash commands (e.g., /help)
 bot.onReaction()          // Emoji reactions
 bot.onChannelJoin()       // User joins
 bot.onChannelLeave()      // User leaves
+
+// Advanced Handlers
+bot.onTip()               // Cryptocurrency tips on messages
+bot.onMessageEdit()       // Message edits
+bot.onRedaction()         // Message deletions
+bot.onEventRevoke()       // Event revokes
+bot.onStreamEvent()       // Raw events
 
 // Legacy Handlers (still work, but prefer onMessage)
 bot.onMentioned()         // @bot mentions → use isMentioned in onMessage
 bot.onReply()             // Replies to bot
 bot.onThreadMessage()     // Thread messages → check threadId in onMessage
 bot.onMentionedInThread() // Thread mentions → check threadId + isMentioned
-
-// Advanced
-bot.onMessageEdit()       // Message edits
-bot.onRedaction()         // Message deletions
-bot.onEventRevoke()       // Event revokes
-bot.onStreamEvent()       // Raw events
 ```
 
 ### onMessage (Current Approach)
@@ -179,6 +195,7 @@ bot.onMessage(async (handler, event) => {
     threadId,     // Thread ID (if in thread)
     replyId,      // Reply ID (if reply)
     mentions,     // Mentioned users
+    attachments,  // Incoming attachments
   } = event
   
   if (userId === bot.botId) return // Required!
@@ -232,6 +249,58 @@ bot.onChannelJoin(async (handler, event) => {
 })
 ```
 
+### onSlashCommand
+```typescript
+// 1. Define commands in src/commands.ts
+export default [
+  { name: 'help', description: 'Show help' },
+  { name: 'stats', description: 'Show stats' },
+]
+
+// 2. Register handlers in src/index.ts
+bot.onSlashCommand("help", async (handler, event) => {
+  const { args, channelId, userId, spaceId } = event
+  await handler.sendMessage(channelId, "Commands: /help, /stats")
+})
+
+bot.onSlashCommand("stats", async (handler, event) => {
+  await handler.sendMessage(event.channelId, "Bot stats here...")
+})
+
+// 3. Sync commands with Towns:
+// npx towns-bot update-commands src/commands.ts <bearer-token>
+```
+
+### onTip
+```typescript
+import { parseEther } from 'viem'
+
+bot.onTip(async (handler, event) => {
+  const { messageId, senderAddress, receiverAddress, amount, currency } = event
+  
+  if (receiverAddress === bot.botId) {
+    const ethAmount = Number(amount) / 1e18
+    await handler.sendMessage(
+      event.channelId,
+      `Thank you for the ${ethAmount} ETH tip!`
+    )
+  }
+})
+
+// Bot can also SEND tips:
+bot.onMessage(async (handler, event) => {
+  if (event.message.includes('reward')) {
+    const { txHash, eventId } = await handler.tip({
+      to: event.userId,
+      amount: parseEther('0.001'),
+      messageId: event.eventId,
+      channelId: event.channelId,
+    })
+    await handler.sendMessage(event.channelId, `Tipped! TX: ${txHash}`)
+  }
+})
+```
+
 ---
 
 ## Handler Actions
@@ -242,6 +311,15 @@ bot.onChannelJoin(async (handler, event) => {
 await handler.sendMessage(channelId, "Text")
 await handler.sendMessage(channelId, "Text", { threadId })
 await handler.sendMessage(channelId, "Text", { replyId })
+await handler.sendMessage(channelId, "Reply with image", {
+  attachments: [
+    {
+      type: 'image',
+      url: 'https://example.com/cat.png',
+      alt: 'Cute cat',
+    },
+  ],
+})
 
 // Send DM
 await handler.sendDm(userId, "Private message")
@@ -259,6 +337,27 @@ await handler.sendReaction(channelId, messageId, "❤️")
 await handler.sendReaction(channelId, messageId, "white_check_mark")
 ```
 
+### Permissions & Moderation
+```typescript
+import { Permission } from '@towns-protocol/sdk'
+
+// Check if user is admin
+const isAdmin = await handler.hasAdminPermission(userId, spaceId)
+
+// Check specific permission
+const canRedact = await handler.checkPermission(channelId, userId, Permission.Redact)
+const canWrite = await handler.checkPermission(channelId, userId, Permission.Write)
+
+// Ban/Unban users (requires bot to have ModifyBanning permission)
+await handler.ban(userId, spaceId)
+await handler.unban(userId, spaceId)
+
+// Available permissions:
+// Permission.Read, Permission.Write, Permission.Redact
+// Permission.ModifyBanning, Permission.PinMessage
+// Permission.AddRemoveChannels, Permission.ModifySpaceSettings
+```
+
 ### Utilities
 ```typescript
 import { 
@@ -271,6 +370,11 @@ import {
 if (isDMChannelStreamId(channelId)) { /* DM */ }
 if (isGDMChannelStreamId(channelId)) { /* Group DM */ }
 if (isChannelStreamId(channelId)) { /* Public channel */ }
+
+// Snapshot data access
+const inception = await bot.snapshot.getChannelInception(channelId)
+const memberships = await bot.snapshot.getUserMemberships(userId)
+const members = await bot.snapshot.getSpaceMemberships(spaceId)
 ```
 
 ---
@@ -385,6 +489,36 @@ const bot = await makeTownsBot(
 
 ---
 
+## Using Bot Methods Outside Handlers
+
+Bot methods can be called directly for external integrations:
+
+```typescript
+// GitHub webhook integration
+app.post('/github-webhook', async (c) => {
+  const payload = await c.req.json()
+  
+  // Send to Towns channel directly
+  await bot.sendMessage(channelId, `New PR: ${payload.pull_request.title}`)
+  return c.json({ success: true })
+})
+
+// Scheduled messages
+setInterval(async () => {
+  await bot.sendMessage(channelId, "⏰ Hourly reminder!")
+}, 3600000)
+
+// Health monitoring
+const checkHealth = async () => {
+  const response = await fetch('https://api.example.com/health')
+  if (!response.ok) {
+    await bot.sendMessage(channelId, "🚨 API is down!")
+  }
+}
+```
+
+---
+
 ## Patterns
 
 ### Greeting Bot
@@ -439,6 +573,84 @@ bot.onMessage(async (handler, event) => {
   if (bad.some(w => event.message.toLowerCase().includes(w))) {
     await handler.adminRemoveEvent(event.channelId, event.eventId)
     await handler.sendMessage(event.channelId, `🚫 <@${event.userId}> removed`)
+  }
+})
+```
+
+### Admin Commands with Permissions
+```typescript
+import { Permission } from '@towns-protocol/sdk'
+
+bot.onSlashCommand("ban", async (handler, event) => {
+  // Check if user is admin
+  if (!await handler.hasAdminPermission(event.userId, event.spaceId)) {
+    await handler.sendMessage(event.channelId, "⛔ Admin only!")
+    return
+  }
+  
+  const userToBan = event.args[0]
+  if (userToBan) {
+    await handler.ban(userToBan, event.spaceId)
+    await handler.sendMessage(event.channelId, `🚫 Banned ${userToBan}`)
+  }
+})
+
+bot.onSlashCommand("clean", async (handler, event) => {
+  // Check if user can redact messages
+  const canRedact = await handler.checkPermission(
+    event.channelId,
+    event.userId,
+    Permission.Redact
+  )
+  
+  if (!canRedact) {
+    await handler.sendMessage(event.channelId, "⛔ No permission!")
+    return
+  }
+  
+  // Delete the message being replied to
+  if (event.replyId) {
+    await handler.adminRemoveEvent(event.channelId, event.replyId)
+    await handler.sendMessage(event.channelId, "🗑️ Message deleted")
+  }
+})
+```
+
+### Tip Bot
+```typescript
+import { parseEther } from 'viem'
+
+// Reward helpful messages
+bot.onMessage(async (handler, event) => {
+  if (event.userId === bot.botId) return
+  
+  const helpful = ['thanks', 'helpful', 'solved']
+  if (helpful.some(w => event.message.toLowerCase().includes(w))) {
+    try {
+      const { txHash } = await handler.tip({
+        to: event.userId,
+        amount: parseEther('0.001'),
+        messageId: event.eventId,
+        channelId: event.channelId,
+      })
+      await handler.sendMessage(
+        event.channelId,
+        `💰 Tipped 0.001 ETH for being helpful! TX: ${txHash.slice(0, 10)}...`
+      )
+    } catch (error) {
+      console.error('Tip failed:', error)
+    }
+  }
+})
+
+// Thank tip senders
+bot.onTip(async (handler, event) => {
+  if (event.receiverAddress === bot.botId) {
+    const amount = Number(event.amount) / 1e18
+    await handler.sendMessage(
+      event.channelId,
+      `🙏 Thank you for the ${amount} ETH tip!`
+    )
   }
 })
 ```
@@ -507,7 +719,70 @@ const containsWords = (msg: string, words: string[]) =>
 4. **Always** use try-catch in handlers
 5. **Use** `db.run()` not `db.exec()`
 6. **Use** `isMentioned` for current approach (or `onMentioned` for legacy)
+7. **Slash commands** never trigger `onMessage` - they're mutually exclusive
+8. **Permission checks** before admin actions (ban, redact, etc.)
+9. **Import Permission** from '@towns-protocol/sdk' for permission checks
+10. **Use parseEther** from 'viem' for tip amounts
+
+---
+
+## All Available Bot Methods
+
+```typescript
+// Message operations
+await bot.sendMessage(channelId, message, opts?)
+await bot.editMessage(channelId, messageId, newMessage)
+await bot.sendReaction(channelId, messageId, reaction)
+await bot.removeEvent(channelId, eventId)
+await bot.adminRemoveEvent(channelId, eventId)
+
+// Permission checks
+await bot.hasAdminPermission(userId, spaceId)
+await bot.checkPermission(channelId, userId, permission)
+
+// Moderation (requires bot permissions)
+await bot.ban(userId, spaceId)
+await bot.unban(userId, spaceId)
+
+// Tips (requires viem)
+await bot.tip({ to, amount, messageId, channelId, currency? })
+
+// Snapshot data
+await bot.snapshot.getChannelInception(channelId)
+await bot.snapshot.getUserMemberships(userId)
+await bot.snapshot.getSpaceMemberships(spaceId)
+
+// Bot identity
+console.log(bot.botId) // Bot's address
+```
 
 ---
 
 **This guide is production-tested. Every pattern works. No fluff.**
+
+### Attachments (Image Support)
+```typescript
+const IMAGE_KEYWORDS = ['image', 'picture', 'photo', 'pic']
+
+bot.onMessage(async (handler, event) => {
+  if (event.userId === bot.botId) return
+  const lower = event.message.toLowerCase()
+
+  if (event.isMentioned && IMAGE_KEYWORDS.some(word => lower.includes(word))) {
+    await handler.sendMessage(event.channelId, `Here you go ${formatUser(event.userId)}!`, {
+      attachments: [
+        {
+          type: 'image',
+          url: 'https://example.com/cat.png',
+          alt: 'Cute cat',
+        },
+      ],
+    })
+  }
+})
+```
+**Rules & Behavior:**
+- Framework fetches the URL, validates the MIME type, and records dimensions automatically.
+- All attachments are end-to-end encrypted before delivery.
+- If the URL is invalid or not an image, the text still sends and a warning is logged.
+- Add multiple files by including more objects in the `attachments` array.

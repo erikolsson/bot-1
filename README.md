@@ -8,6 +8,7 @@ Complete bot template ready for Render deployment. Works with Cursor AI for easy
 **Out of the box:**
 - Responds to "GM" with "GM back"
 - Responds to @bot mentions
+- Shares an example image when you mention it with words like "image" or "picture"
 - Welcomes new users
 - Tracks all events with logging
 - Health check endpoint for monitoring
@@ -131,11 +132,12 @@ This template is optimized for **Cursor + Claude/ChatGPT**.
 "Create message moderation for bad words"
 "Add statistics tracking with database"
 "Build leaderboard system with points"
+"Send an image when users say 'show pic'"
 ```
 
 AI references:
 - `COMPLETE_KNOWLEDGE_BASE.md` - All handlers, patterns, deployment
-- `.cursorrules` - SDK v0.0.364 guidelines
+- `.cursorrules` - Latest SDK guidelines
 - Template code in `src/index.ts`
 
 ---
@@ -160,12 +162,32 @@ npm run deploy          # Verify build ready
 ### Dependencies
 ```json
 {
-  "@towns-protocol/bot": "^0.0.364",
-  "@towns-protocol/sdk": "^0.0.364",
+  "@towns-protocol/bot": "latest",
+  "@towns-protocol/sdk": "latest",
   "@hono/node-server": "^1.14.0",
   "hono": "^4.7.11"
 }
 ```
+
+**Keep your SDK updated:**
+```bash
+bun run check-versions  # Check for updates
+bun run update-sdk      # Update to latest
+```
+
+### Sending Images & Attachments
+```typescript
+await handler.sendMessage(channelId, "Here's your visual", {
+  attachments: [
+    {
+      type: 'image',
+      url: 'https://example.com/cat.png',
+      alt: 'Cute cat',
+    },
+  ],
+})
+```
+The bot fetches the URL, validates that it is an image, measures dimensions, encrypts the payload, and still delivers the text even if the attachment fails. Add multiple attachments by pushing additional objects into the array.
 
 ### Commands Registration (Required!)
 ```typescript
@@ -234,10 +256,10 @@ RegisterWebhook: (66:CANNOT_CALL_WEBHOOK)
 ## Documentation
 
 - **COMPLETE_KNOWLEDGE_BASE.md** - Deployment, handlers, patterns, errors
-- **.cursorrules** - AI guidelines for SDK v0.0.364
+- **.cursorrules** - AI guidelines for latest SDK
 
 ---
 
-**Render-Ready | Auto-Deploy on Git Push | SDK v0.0.364**
+**Render-Ready | Auto-Deploy on Git Push | Always Current**
 
 https://github.com/Crisvond-hnt/Townsbot-vibecoding

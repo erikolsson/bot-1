@@ -1,6 +1,6 @@
 /**
  * 🤖 ULTIMATE TOWNS PROTOCOL BOT STARTER TEMPLATE
- * SDK v0.0.364+ | Production Ready | Render Optimized
+ * Production Ready | Render Optimized | VIBE CODING READY
  * 
  * Perfect for AI-assisted development with Cursor + Claude/ChatGPT
  * All imports, functions, and patterns ready for AI agents to build upon
@@ -9,6 +9,15 @@
  * ✅ AI OPTIMIZED: Every function documented with usage examples
  * ✅ PRODUCTION READY: Based on proven patterns from working bots
  * ✅ RENDER OPTIMIZED: Configured for Render.com deployment
+ * ✅ ALWAYS CURRENT: Run `bun run update-sdk` to get latest SDK features
+ * 
+ * 🆕 LATEST SDK FEATURES:
+ * • Slash Commands (/help, /ban, /stats) - Commented examples ready to enable
+ * • Tip Handlers - Send/receive cryptocurrency tips on messages
+ * • Permission System - Admin checks, ban/unban, permission validation
+ * • External Integrations - Use bot methods outside handlers (webhooks, timers)
+ * • Snapshot Data Access - Get channel/user/space membership info
+ * • Complete SDK Reference - All latest features documented in comments
  */
 
 // ===== CORE TOWNS PROTOCOL IMPORTS =====
@@ -19,7 +28,11 @@ import {
   isGDMChannelStreamId,
   isDefaultChannelId
 } from '@towns-protocol/sdk'
+// import { Permission } from '@towns-protocol/sdk'  // Uncomment for permission checks
 import { MembershipOp } from '@towns-protocol/proto'
+
+// ===== WEB3 IMPORTS (for tips) =====
+// import { parseEther } from 'viem'  // Uncomment for tip functionality
 
 // ===== SERVER AND UTILITIES =====
 import { serve } from '@hono/node-server'
@@ -46,6 +59,31 @@ import commands from './commands.js'
 //
 // console.log('🗄️ Database initialized')
 
+// ===== ⚠️ CRITICAL: STATELESS ARCHITECTURE WARNING =====
+/**
+ * 🚨 MOST IMPORTANT CONCEPT: The bot framework is COMPLETELY STATELESS
+ * 
+ * This means:
+ * ❌ NO message history - Cannot retrieve previous messages
+ * ❌ NO thread context - Only get threadId, not original message content
+ * ❌ NO reply context - Only get replyId, not the message being replied to
+ * ❌ NO conversation memory - Each webhook call is independent
+ * ❌ NO user sessions - Cannot track users across events
+ * 
+ * ✅ To store context, you MUST use:
+ * - In-memory storage (Map/Set) - Fast, but lost on restart
+ * - Database (SQLite/Postgres) - Persistent, survives restarts
+ * - External storage (Redis) - Shared across instances
+ * 
+ * Example patterns below show how to implement context storage!
+ */
+
+// ===== IN-MEMORY STORAGE (OPTIONAL - for context tracking) =====
+// Uncomment these if you need to track message context, user workflows, etc.
+// const messageCache = new Map<string, any>()    // Store messages for context
+// const userWorkflows = new Map<string, any>()   // Track multi-step user interactions
+// const threadContexts = new Map<string, any>()  // Track thread conversations
+
 // ===== BOT CONFIGURATION =====
 const config = {
   // Bot behavior settings (customize these!)
@@ -57,6 +95,8 @@ const config = {
   // maxMessagesPerMinute: 10,
   // requireVerification: false,
 }
+
+const IMAGE_KEYWORDS = ['image', 'picture', 'photo', 'pic', 'art', 'gallery']
 
 // ===== ENVIRONMENT VARIABLE VALIDATION (CRITICAL!) =====
 // Validate before bot initialization to catch errors early
@@ -111,7 +151,7 @@ console.log('🎯 Bot ID:', bot.botId)
 // ===== EVENT HANDLERS =====
 
 /**
- * 📨 MESSAGE HANDLER - Triggered for ALL messages (SDK v0.0.364+)
+ * 📨 MESSAGE HANDLER - Triggered for ALL messages
  * 
  * AI PROMPT EXAMPLES:
  * "Make the bot respond to 'wagmi' with 'WAGMI 🚀'"
@@ -119,7 +159,7 @@ console.log('🎯 Bot ID:', bot.botId)
  * "Make the bot count how many times users say specific words"
  */
 bot.onMessage(async (handler, event) => {
-  const { message, userId, channelId, spaceId, eventId, isMentioned, threadId } = event
+  const { message, userId, channelId, isMentioned } = event
   
   // 🚨 CRITICAL: Always skip bot's own messages (prevents infinite loops)
   if (userId === bot.botId) return
@@ -127,7 +167,7 @@ bot.onMessage(async (handler, event) => {
   try {
   console.log(`💬 Message from ${userId.slice(0, 8)}...: ${message.substring(0, 50)}...`)
 
-    // ===== HANDLE BOT MENTIONS (SDK v0.0.364+) =====
+    // ===== HANDLE BOT MENTIONS =====
     // When someone @mentions the bot
     if (isMentioned) {
       const lowerMessage = message.toLowerCase()
@@ -147,6 +187,19 @@ Mention me with "help" for this message.
         return
       }
       
+      if (containsWords(lowerMessage, IMAGE_KEYWORDS)) {
+        await handler.sendMessage(channelId, `Sending one over ${formatUser(userId)}!`, {
+          attachments: [
+            {
+              type: 'image',
+              url: 'https://towns-protocol-public.s3.us-west-2.amazonaws.com/examples/towns-bot-starter/wagmi.png',
+              alt: 'WAGMI rocket illustration',
+            },
+          ],
+        })
+        return
+      }
+
       // Default mention response
       await handler.sendMessage(channelId, `GM <@${userId}>! 👋 Mention me with "help" for more info!`)
       return
@@ -154,47 +207,46 @@ Mention me with "help" for this message.
 
     // ===== DETECT MESSAGE TYPE (if needed) =====
     if (isDMChannelStreamId(channelId)) {
-    console.log('📱 Direct message received')
-    // Handle DM logic here
-    // await handler.sendDm(userId, "Thanks for your DM!")
-    return
-  }
+      console.log('📱 Direct message received')
+      // Handle DM logic here
+      // await handler.sendDm(userId, "Thanks for your DM!")
+      return
+    }
   
     if (isGDMChannelStreamId(channelId)) {
-    console.log('👥 Group DM received')
-    // Handle group DM logic here
-    return
-  }
+      console.log('👥 Group DM received')
+      // Handle group DM logic here
+      return
+    }
 
     // ===== HANDLE REGULAR CHANNEL MESSAGES =====
-  const lowerMessage = message.toLowerCase()
+    const lowerMessage = message.toLowerCase()
 
     // Greeting responses
-  if (config.respondToGM && (lowerMessage.includes('gm') || lowerMessage.includes('good morning'))) {
-    await handler.sendMessage(channelId, `GM <@${userId}>! ☀️`)
-    console.log(`☀️ Responded to GM from ${userId.slice(0, 8)}...`)
-  }
+    if (config.respondToGM && (lowerMessage.includes('gm') || lowerMessage.includes('good morning'))) {
+      await handler.sendMessage(channelId, `GM <@${userId}>! ☀️`)
+      console.log(`☀️ Responded to GM from ${userId.slice(0, 8)}...`)
+    }
 
-  if (lowerMessage.includes('gn') || lowerMessage.includes('good night')) {
-    await handler.sendMessage(channelId, `Good night <@${userId}>! 🌙`)
-    console.log(`🌙 Responded to GN from ${userId.slice(0, 8)}...`)
-  }
+    if (lowerMessage.includes('gn') || lowerMessage.includes('good night')) {
+      await handler.sendMessage(channelId, `Good night <@${userId}>! 🌙`)
+      console.log(`🌙 Responded to GN from ${userId.slice(0, 8)}...`)
+    }
 
-  if (config.respondToHello && lowerMessage.match(/\b(hello|hi|hey)\b/)) {
-    await handler.sendMessage(channelId, `Hello <@${userId}>! 👋`)
-    console.log(`👋 Responded to greeting from ${userId.slice(0, 8)}...`)
-  }
+    if (config.respondToHello && lowerMessage.match(/\b(hello|hi|hey)\b/)) {
+      await handler.sendMessage(channelId, `Hello <@${userId}>! 👋`)
+      console.log(`👋 Responded to greeting from ${userId.slice(0, 8)}...`)
+    }
 
-  // ===== ADD YOUR CUSTOM MESSAGE RESPONSES HERE =====
-  // AI EXAMPLES:
-  // if (lowerMessage.includes('wagmi')) {
-  //   await handler.sendMessage(channelId, `WAGMI <@${userId}>! 🚀`)
-  // }
-  //
-  // if (lowerMessage.includes('moon')) {
-  //   await handler.sendReaction(channelId, eventId, '🚀')
-  // }
-    
+    // ===== ADD YOUR CUSTOM MESSAGE RESPONSES HERE =====
+    // AI EXAMPLES:
+    // if (lowerMessage.includes('wagmi')) {
+    //   await handler.sendMessage(channelId, `WAGMI <@${userId}>! 🚀`)
+    // }
+    //
+    // if (lowerMessage.includes('moon')) {
+    //   await handler.sendReaction(channelId, eventId, '🚀')
+    // }
   } catch (error) {
     console.error('❌ Error in message handler:', error)
   }
@@ -202,7 +254,7 @@ Mention me with "help" for this message.
 
 /**
  * 📢 MENTION HANDLER - Triggered when @bot is mentioned
- * NOTE: onMentioned removed in SDK v0.0.364 - use onMessage with isMentioned check instead
+ * NOTE: Modern approach uses onMessage with isMentioned check (shown above)
  * 
  * AI PROMPT EXAMPLES:
  * "Add a @bot stats command that shows bot usage"
@@ -321,6 +373,193 @@ bot.onMessageEdit(async (handler, { refEventId, message, userId, channelId, spac
  * "Add context-aware responses in threads"
  */
 
+// ===== SLASH COMMAND HANDLERS (uncomment to use) =====
+
+/**
+ * ⚡ SLASH COMMAND HANDLER - Triggered when users type /commands
+ * SETUP REQUIRED:
+ * 1. Add commands to src/commands.ts
+ * 2. Sync: npx towns-bot update-commands src/commands.ts <bearer-token>
+ * 
+ * AI PROMPT EXAMPLES:
+ * "Add a /stats command showing bot statistics"
+ * "Create a /poll command to create polls"
+ * "Add a /help command with all available commands"
+ */
+
+// bot.onSlashCommand("help", async (handler, event) => {
+//   const { channelId, userId } = event
+//   await handler.sendMessage(channelId, `🤖 **Bot Commands**
+// 
+// Available commands:
+// • /help - Show this help message
+// • /stats - Show bot statistics
+// 
+// *More commands coming soon!*`)
+// })
+
+// bot.onSlashCommand("stats", async (handler, event) => {
+//   await handler.sendMessage(event.channelId, `📊 **Bot Stats**
+// 
+// • Uptime: ${process.uptime()} seconds
+// • Bot ID: ${bot.botId}
+// 
+// *Add your custom stats here!*`)
+// })
+
+// ===== ADMIN COMMANDS (uncomment to use) =====
+
+/**
+ * 🛡️ ADMIN COMMANDS - Permission-based moderation commands
+ * 
+ * AI PROMPT EXAMPLES:
+ * "Add a /ban command for admins to ban users"
+ * "Create a /clean command to delete messages"
+ * "Add a /mute command to timeout users"
+ */
+
+// bot.onSlashCommand("ban", async (handler, event) => {
+//   // Check if user is admin
+//   if (!await handler.hasAdminPermission(event.userId, event.spaceId)) {
+//     await handler.sendMessage(event.channelId, "⛔ Admin only!")
+//     return
+//   }
+//   
+//   const userToBan = event.mentions[0]?.userId || event.args[0]
+//   if (!userToBan) {
+//     await handler.sendMessage(event.channelId, "Usage: /ban @user or /ban <address>")
+//     return
+//   }
+//   
+//   try {
+//     await handler.ban(userToBan, event.spaceId)
+//     await handler.sendMessage(event.channelId, `🚫 Banned user ${userToBan}`)
+//   } catch (error: any) {
+//     await handler.sendMessage(event.channelId, `Failed to ban: ${error.message}`)
+//   }
+// })
+
+// bot.onSlashCommand("unban", async (handler, event) => {
+//   if (!await handler.hasAdminPermission(event.userId, event.spaceId)) {
+//     await handler.sendMessage(event.channelId, "⛔ Admin only!")
+//     return
+//   }
+//   
+//   const userToUnban = event.args[0]
+//   if (!userToUnban) {
+//     await handler.sendMessage(event.channelId, "Usage: /unban <address>")
+//     return
+//   }
+//   
+//   try {
+//     await handler.unban(userToUnban, event.spaceId)
+//     await handler.sendMessage(event.channelId, `✅ Unbanned user ${userToUnban}`)
+//   } catch (error: any) {
+//     await handler.sendMessage(event.channelId, `Failed to unban: ${error.message}`)
+//   }
+// })
+
+// bot.onSlashCommand("clean", async (handler, event) => {
+//   // Check if user has redaction permission
+//   const canRedact = await handler.checkPermission(
+//     event.channelId,
+//     event.userId,
+//     Permission.Redact
+//   )
+//   
+//   if (!canRedact) {
+//     await handler.sendMessage(event.channelId, "⛔ You need Redact permission!")
+//     return
+//   }
+//   
+//   // Delete the message being replied to
+//   if (!event.replyId) {
+//     await handler.sendMessage(event.channelId, "Reply to a message to delete it")
+//     return
+//   }
+//   
+//   try {
+//     await handler.adminRemoveEvent(event.channelId, event.replyId)
+//     await handler.sendMessage(event.channelId, "🗑️ Message deleted")
+//   } catch (error: any) {
+//     await handler.sendMessage(event.channelId, `Failed to delete: ${error.message}`)
+//   }
+// })
+
+// ===== TIP HANDLERS (uncomment to use) =====
+
+/**
+ * 💰 TIP HANDLERS - Cryptocurrency tipping functionality
+ * REQUIRES: import { parseEther } from 'viem'
+ * 
+ * AI PROMPT EXAMPLES:
+ * "Make the bot tip helpful messages automatically"
+ * "Add a /reward command to tip users"
+ * "Thank users when they tip the bot"
+ */
+
+// bot.onTip(async (handler, event) => {
+//   const { messageId, senderAddress, receiverAddress, amount, currency, channelId } = event
+//   
+//   // Thank users who tip the bot
+//   if (receiverAddress === bot.botId) {
+//     const ethAmount = Number(amount) / 1e18
+//     await handler.sendMessage(
+//       channelId,
+//       `🙏 Thank you <@${senderAddress}> for the ${ethAmount} ETH tip!`
+//     )
+//   }
+// })
+
+// // Auto-tip helpful messages
+// bot.onMessage(async (handler, event) => {
+//   if (event.userId === bot.botId) return
+//   
+//   const helpfulKeywords = ['thanks', 'helpful', 'solved', 'great answer']
+//   const isHelpful = helpfulKeywords.some(keyword =>
+//     event.message.toLowerCase().includes(keyword)
+//   )
+//   
+//   if (isHelpful) {
+//     try {
+//       const { txHash } = await handler.tip({
+//         to: event.userId,
+//         amount: parseEther('0.001'), // 0.001 ETH
+//         messageId: event.eventId,
+//         channelId: event.channelId,
+//       })
+//       await handler.sendMessage(
+//         event.channelId,
+//         `💰 Tipped 0.001 ETH for being helpful! TX: ${txHash.slice(0, 10)}...`
+//       )
+//     } catch (error) {
+//       console.error('Tip failed:', error)
+//     }
+//   }
+// })
+
+// ===== ADVANCED PATTERNS (see AGENTS.md for complete examples) =====
+
+/**
+ * 📚 For advanced bot patterns, see AGENTS.md:
+ * 
+ * • Pattern 1: Contextual Responses (line 529-561)
+ *   Store message context to provide intelligent replies
+ * 
+ * • Pattern 2: Multi-Step Workflows (line 563-599)
+ *   Track user state for forms, onboarding, configuration wizards
+ * 
+ * • Pattern 3: Thread Conversations (line 601-647)
+ *   Maintain context within thread discussions
+ * 
+ * • External Integrations (line 1131-1259)
+ *   GitHub webhooks, scheduled messages, health monitoring
+ *   Bot methods work OUTSIDE handlers - call bot.sendMessage() from anywhere!
+ * 
+ * • Storage Strategies (line 949-1031)
+ *   In-memory vs Database - choose based on hosting environment
+ */
+
 // ===== ADDITIONAL EVENT HANDLERS (uncomment to use) =====
 
 /**
@@ -336,6 +575,9 @@ bot.onMessageEdit(async (handler, { refEventId, message, userId, channelId, spac
  */
 // bot.onRedaction(async (handler, { refEventId, userId, channelId, spaceId, eventId }) => {
 //   console.log(`🗑️ Message ${refEventId.slice(0, 8)}... was deleted`)
+//   // Clean up any stored data for this message
+//   // messageCache.delete(refEventId)
+//   // threadContexts.delete(refEventId)
 // })
 
 /**
@@ -400,7 +642,7 @@ bot.onMessage(async (handler, event) => {
   try {
     const lowerMessage = message.toLowerCase()
 
-    // ===== HANDLE BOT MENTIONS (SDK v0.0.364+) =====
+    // ===== HANDLE BOT MENTIONS =====
     if (isMentioned) {
       if (lowerMessage.includes('help')) {
         await handler.sendMessage(channelId, `🤖 **Ultimate Towns Bot**
@@ -502,53 +744,151 @@ if (isRender) {
 console.log(`\n💡 Configure webhook in Towns Developer Portal`)
 console.log(`   https://app.alpha.towns.com/developer`)
 
-// ===== AVAILABLE HANDLER FUNCTIONS FOR AI TO USE =====
+// ===== COMPLETE SDK FUNCTION REFERENCE FOR AI =====
 /*
 
-COMPLETE FUNCTION REFERENCE FOR AI AGENTS:
+🎯 ULTIMATE FUNCTION REFERENCE FOR AI AGENTS (Latest SDK)
 
 === MESSAGE FUNCTIONS ===
-await handler.sendMessage(channelId, "Hello!")                    // Send to channel
-await handler.sendMessage(channelId, "Reply", { threadId })       // Send in thread
-await handler.sendMessage(channelId, "Reply", { replyId })        // Reply to message
-await handler.sendDm(userId, "Private message")                   // Direct message
-await handler.editMessage(channelId, messageId, "New text")       // Edit bot's message
-await handler.removeEvent(channelId, messageId)                   // Delete bot's message
-await handler.adminRemoveEvent(channelId, messageId)              // Delete user's message
+await handler.sendMessage(channelId, "Hello!")                              // Send to channel
+await handler.sendMessage(channelId, "Reply", { threadId })                 // Send in thread
+await handler.sendMessage(channelId, "Reply", { replyId })                  // Reply to message
+await handler.sendMessage(channelId, "With image", {                        // Send with attachments
+  attachments: [{ type: 'image', url: 'https://...', alt: 'description' }]
+})
+await handler.sendDm(userId, "Private message")                             // Direct message
+await handler.editMessage(channelId, messageId, "New text")                 // Edit bot's message
+await handler.removeEvent(channelId, messageId)                             // Delete bot's message
+await handler.adminRemoveEvent(channelId, messageId)                        // Delete user's message (needs Permission.Redact)
 
 === REACTION FUNCTIONS ===
-await handler.sendReaction(channelId, messageId, "👍")           // Add reaction
-await handler.sendReaction(channelId, messageId, "❤️")           // Heart reaction
-await handler.sendReaction(channelId, messageId, "white_check_mark") // ✅ reaction
+await handler.sendReaction(channelId, messageId, "👍")                     // Add reaction
+await handler.sendReaction(channelId, messageId, "❤️")                     // Heart reaction
+await handler.sendReaction(channelId, messageId, "white_check_mark")       // ✅ reaction
 
-=== BOT IDENTITY FUNCTIONS ===
-await handler.setUsername(channelId, "MyBot")                    // Set bot username
-await handler.setDisplayName(channelId, "🤖 My Bot")             // Set display name
+=== PERMISSION & MODERATION FUNCTIONS (NEW!) ===
+await handler.hasAdminPermission(userId, spaceId)                           // Check if user is admin
+await handler.checkPermission(channelId, userId, Permission.Redact)         // Check specific permission
+await handler.ban(userId, spaceId)                                          // Ban user (requires ModifyBanning)
+await handler.unban(userId, spaceId)                                        // Unban user (requires ModifyBanning)
 
-=== USER DATA FUNCTIONS ===
-await handler.getUserData(channelId, userId)                     // Get user info (deprecated)
+// Available Permission constants:
+// Permission.Read, Permission.Write, Permission.Redact, Permission.React
+// Permission.ModifyBanning, Permission.PinMessage, Permission.AddRemoveChannels
+// Permission.ModifySpaceSettings, Permission.Invite, Permission.JoinSpace
+
+=== TIP FUNCTIONS (NEW! - requires viem) ===
+await handler.tip({                                                         // Send cryptocurrency tip
+  to: userAddress,
+  amount: parseEther('0.001'),
+  messageId: eventId,
+  channelId: channelId,
+  currency: '0x...' // optional, defaults to ETH
+})
+// Returns: { txHash: string, eventId: string }
+
+=== BOT METHODS (can be called directly, not just in handlers!) ===
+await bot.sendMessage(channelId, message, opts?)                           // Send from anywhere
+await bot.sendReaction(channelId, messageId, reaction)                     // React from anywhere
+await bot.editMessage(channelId, messageId, newMessage)                    // Edit from anywhere
+await bot.removeEvent(channelId, eventId)                                  // Delete from anywhere
+await bot.hasAdminPermission(userId, spaceId)                              // Check permission from anywhere
+console.log(bot.botId)                                                     // Get bot's address
+
+// Use cases: External webhooks, scheduled tasks, health monitoring
+// Example: app.post('/github-webhook', async (c) => { 
+//   await bot.sendMessage(channelId, "New PR opened!") 
+// })
+
+=== SNAPSHOT DATA ACCESS (NEW!) ===
+await bot.snapshot.getChannelInception(channelId)                          // Get channel settings
+await bot.snapshot.getUserMemberships(userId)                              // Get user memberships
+await bot.snapshot.getSpaceMemberships(spaceId)                            // Get space members
 
 === EVENT HANDLER SIGNATURES ===
-bot.onMessage(async (handler, { message, userId, channelId, spaceId, eventId, isDm, isGdm }) => {})
-bot.onMentioned(async (handler, { message, userId, channelId, spaceId, eventId }) => {})
-bot.onReaction(async (handler, { reaction, messageId, userId, channelId, spaceId }) => {})
-bot.onChannelJoin(async (handler, { userId, channelId, spaceId, eventId }) => {})
-bot.onChannelLeave(async (handler, { userId, channelId, spaceId, eventId }) => {})
-bot.onReply(async (handler, { message, userId, channelId, spaceId, eventId }) => {})
-bot.onThreadMessage(async (handler, { threadId, message, userId, channelId, spaceId, eventId }) => {})
-bot.onMentionedInThread(async (handler, { threadId, message, userId, channelId, spaceId, eventId }) => {})
-bot.onMessageEdit(async (handler, { refEventId, message, userId, channelId, spaceId, eventId }) => {})
-bot.onRedaction(async (handler, { refEventId, userId, channelId, spaceId, eventId }) => {})
+bot.onMessage(async (handler, event) => {})
+  // event: { message, userId, channelId, spaceId, eventId, isMentioned, threadId?, replyId?, mentions, attachments }
+
+bot.onSlashCommand("commandName", async (handler, event) => {})            // NEW!
+  // event: { command, args, userId, channelId, spaceId, mentions, replyId?, threadId? }
+
+bot.onTip(async (handler, event) => {})                                    // NEW!
+  // event: { messageId, senderAddress, receiverAddress, amount, currency, channelId }
+
+bot.onReaction(async (handler, event) => {})
+  // event: { reaction, messageId, userId, channelId, spaceId }
+
+bot.onChannelJoin(async (handler, event) => {})
+  // event: { userId, channelId, spaceId, eventId }
+
+bot.onChannelLeave(async (handler, event) => {})
+  // event: { userId, channelId, spaceId, eventId }
+
+bot.onMessageEdit(async (handler, event) => {})
+  // event: { refEventId, message, userId, channelId, spaceId, eventId, isMentioned, mentions }
+
+bot.onRedaction(async (handler, event) => {})
+  // event: { refEventId, userId, channelId, spaceId, eventId }
 
 === UTILITY FUNCTIONS ===
-isChannelStreamId(streamId)     // Check if public channel
-isDMChannelStreamId(streamId)   // Check if direct message
-isGDMChannelStreamId(streamId)  // Check if group DM
-isDefaultChannelId(channelId)   // Check if default channel
+isChannelStreamId(streamId)                // Check if public channel
+isDMChannelStreamId(streamId)              // Check if direct message
+isGDMChannelStreamId(streamId)             // Check if group DM
+isDefaultChannelId(channelId)              // Check if default channel
 
-=== DATABASE PATTERNS (if using database) ===
-db.run('INSERT INTO table VALUES (?, ?)', [param1, param2])      // Insert data
-db.query('SELECT * FROM table WHERE id = ?').get(param)          // Get single row
-db.query('SELECT * FROM table WHERE id = ?').all(param)          // Get all rows
+=== DATABASE PATTERNS (Bun SQLite) ===
+db.run('INSERT INTO table VALUES (?, ?)', [param1, param2])                // Insert data
+db.query('SELECT * FROM table WHERE id = ?').get(param)                    // Get single row
+db.query('SELECT * FROM table WHERE id = ?').all(param)                    // Get all rows
+// IMPORTANT: Use db.run() NOT db.exec()
+
+=== HELPER FUNCTIONS IN THIS FILE ===
+formatUser(userId)                         // Returns: <@userId> for mentions
+shortId(id)                               // Returns: shortened ID for logging
+containsWords(message, ['word1', 'word2']) // Check if message contains any words
+
+=== CRITICAL PATTERNS ===
+// 1. Always filter bot's own messages
+// if (userId === bot.botId) return
+
+// 2. Always use try-catch in handlers
+// try { handler code } catch (error) { console.error(error) }
+
+// 3. Check permissions before admin actions
+// if (!await handler.hasAdminPermission(userId, spaceId)) return
+
+// 4. Slash commands never trigger onMessage (mutually exclusive)
+
+// 5. Store channel IDs for external integrations
+// Example:
+// let notificationChannelId: string | null = null
+// bot.onSlashCommand("setup-here", async (handler, event) => {
+//   notificationChannelId = event.channelId
+// })
+
+=== QUICK REFERENCES ===
+
+📚 Complete Documentation: See AGENTS.md and COMPLETE_KNOWLEDGE_BASE.md
+
+🔧 Troubleshooting: AGENTS.md lines 1296-1341
+  • Bot not responding? Check credentials & webhook URL
+  • Lost context? Use persistent storage (Map/Database)
+  • Slash commands? Sync with: npx towns-bot update-commands src/commands.ts <token>
+
+💾 Storage Guide: AGENTS.md lines 949-1031
+  • Always-On VPS → Map/Set or SQLite (fast)
+  • Free Tier → SQLite or Turso (persists through restarts)
+  • Production → Redis or PostgreSQL (scalable)
+
+🎨 AI Vibe Coding Prompts:
+  • "Add a bot response when users say X"
+  • "Create a /command that does Y"
+  • "Make it admin-only by checking permissions"
+  • "Reward users who say X with 0.001 ETH"
+
+⚡ Quick Commands:
+  bun install           # Install dependencies
+  bun run build         # Build for production
+  bun run start         # Run production build
 
 */

@@ -38,21 +38,27 @@ echo ""
 echo "🦊 Checking Bun installation:"
 
 if command -v bun &> /dev/null; then
-  BUN_VERSION=$(bun --version)
-  echo "   ✅ Bun installed: v$BUN_VERSION"
-  
-  # Check if version is at least 1.2.20
-  REQUIRED_VERSION="1.2.20"
-  if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$BUN_VERSION" | sort -V | head -n1)" = "$REQUIRED_VERSION" ]; then
-    echo "   ✅ Version OK (>= $REQUIRED_VERSION)"
-  else
-    echo "   ⚠️  Version $BUN_VERSION is older than recommended $REQUIRED_VERSION"
-    echo "   💡 Update with: curl -fsSL https://bun.sh/install | bash"
-  fi
+  BUN_BIN="$(command -v bun)"
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+  BUN_BIN="$HOME/.bun/bin/bun"
+  export BUN_INSTALL="$HOME/.bun"
+  export PATH="$BUN_INSTALL/bin:$PATH"
 else
   echo "   ❌ Bun not installed"
   echo "   💡 Install with: curl -fsSL https://bun.sh/install | bash"
   exit 1
+fi
+
+BUN_VERSION=$($BUN_BIN --version)
+echo "   ✅ Bun installed: v$BUN_VERSION"
+
+# Check if version is at least 1.2.20
+REQUIRED_VERSION="1.2.20"
+if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$BUN_VERSION" | sort -V | head -n1)" = "$REQUIRED_VERSION" ]; then
+  echo "   ✅ Version OK (>= $REQUIRED_VERSION)"
+else
+  echo "   ⚠️  Version $BUN_VERSION is older than recommended $REQUIRED_VERSION"
+  echo "   💡 Update with: curl -fsSL https://bun.sh/install | bash"
 fi
 
 echo ""
