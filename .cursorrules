@@ -1,240 +1,368 @@
-# Towns Protocol Bot Development Rules
-**SDK v0.0.367 | Production Patterns | Render Deployment**
+# Towns Protocol Bot Development Rules for AI Agents
+**Latest SDK | Production Patterns | Render Deployment**
 
-## AI Instructions
+## 🎯 CRITICAL: Read This First
 
-When building Towns Protocol bots, follow this EXACT order:
+When developing Towns Protocol bots, **ALWAYS**:
 
-### Step 1: Environment Setup (FIRST!)
+1. **Check AGENTS.md FIRST** - Your primary reference for all patterns and architecture
+2. **Check for latest SDK** - Run `bun run check-versions` before starting
+3. **Never hardcode SDK versions** - Always say "latest SDK" in docs
+4. **Understand stateless architecture** - See AGENTS.md lines 15-28 (MOST IMPORTANT!)
+5. **Reference AGENTS.md by line number** - Don't duplicate docs in code
 
-**Install Bun:**
+---
+
+## 📚 Primary Documentation Sources
+
+### AGENTS.md - Your Main Reference
+- **Lines 15-28**: STATELESS ARCHITECTURE (MOST IMPORTANT - read this!)
+- **Lines 44-527**: Complete event handler reference with payloads
+- **Lines 529-647**: Handler combination patterns (contextual, workflows, threads)
+- **Lines 649-947**: Bot actions API reference
+- **Lines 949-1031**: Storage strategy decision matrix
+- **Lines 1131-1259**: External integrations (GitHub, timers, health checks)
+- **Lines 1296-1341**: Troubleshooting guide
+
+### COMPLETE_KNOWLEDGE_BASE.md - Quick Reference
+- Deployment steps for Render.com
+- Common patterns and examples
+- Troubleshooting quick fixes
+
+### src/index.ts - Working Examples
+- Clean code with brief comments
+- References to AGENTS.md for deep dives
+- Uncommentable examples ready to use
+
+---
+
+## ⚡ Before Writing ANY Code
+
+### Step 1: Check SDK Version
 ```bash
-# Check if Bun is installed
-bun --version
-
-# If not installed, run:
-curl -fsSL https://bun.sh/install | bash
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+bun run check-versions  # See if updates available
+bun run update-sdk      # Update if needed
 ```
 
-**Check SDK Versions:**
-```bash
-# Check current vs latest
-npm run check-versions
-
-# If updates available, run:
-npm run update-sdk
-```
-
-**Install Dependencies:**
+### Step 2: Install Dependencies
 ```bash
 bun install
 ```
 
-### Step 2: Verify Required Files
+### Step 3: Verify Required Files Exist
+- ✅ `src/index.ts` - Main bot code
+- ✅ `src/commands.ts` - Command definitions (REQUIRED for webhooks!)
+- ✅ `package.json` - Dependencies
+- ✅ `.env.sample` - Environment template
+- ✅ `tsconfig.json` - TypeScript config
+- ✅ `esbuild.config.mjs` - Build config
 
-**Must exist:**
-- `src/index.ts` - Main bot code
-- `src/commands.ts` - Command definitions
-- `package.json` - Dependencies
-- `.env.sample` - Environment template
-- `tsconfig.json` - TypeScript config
-- `esbuild.config.mjs` - Build config
+---
 
-**Check package.json has:**
-```json
-{
-  "@towns-protocol/bot": "0.0.367",
-  "@towns-protocol/sdk": "0.0.367",
-  "@hono/node-server": "^1.14.0",
-  "hono": "^4.7.11"
-}
-```
+## 🚨 CRITICAL ARCHITECTURE CONCEPTS
 
-### Step 3: Required Code Patterns
+### 1. STATELESS EVENT PROCESSING (Read AGENTS.md lines 15-28!)
 
-**src/commands.ts (MUST exist for webhooks!):**
+**The bot framework is COMPLETELY STATELESS:**
+- ❌ NO message history
+- ❌ NO thread context (only get threadId, not original message)
+- ❌ NO reply context (only get replyId, not the message)
+- ❌ NO conversation memory
+- ❌ NO user sessions
+
+**Implications:**
+- ✅ MUST use external storage (Map, SQLite, Redis, PostgreSQL)
+- ✅ Design interactions that work with single events
+- ✅ Store context explicitly if needed
+
+**Storage Decision Matrix:** See AGENTS.md lines 949-958
+
+### 2. Bot Message Filtering (PREVENT INFINITE LOOPS!)
 ```typescript
-export default [
-  { name: 'help', description: 'Show help' },
-]
-```
-
-**Image Attachments (SDK v0.0.367):**
-```typescript
-await handler.sendMessage(channelId, "Here's an image", {
-  attachments: [
-    {
-      type: 'image',
-      url: 'https://example.com/cat.png',
-      alt: 'Cute cat', // optional but recommended
-    },
-  ],
+bot.onMessage(async (handler, event) => {
+  if (event.userId === bot.botId) return // CRITICAL!
+  // ... rest of code
 })
 ```
-> The framework fetches the URL, validates the MIME type, measures image dimensions, and encrypts the payload automatically. Invalid URLs or non-image responses are skipped gracefully and logged.
 
-**src/index.ts initialization:**
+**ALWAYS filter bot's own messages in EVERY handler!**
+
+### 3. Commands Registration (REQUIRED!)
+```typescript
+// 1. Define in src/commands.ts
+export default [
+  { name: 'help', description: 'Show help' }
+]
+
+// 2. Import and pass to bot
+import commands from './commands.js'
+const bot = await makeTownsBot(privateData, jwtSecret, { commands } as any)
+```
+
+**Missing `{ commands } as any` = webhook fails with CANNOT_CALL_WEBHOOK**
+
+---
+
+## 🎨 When User Asks for Features
+
+### For Basic Responses
+- Check if example already exists in `src/index.ts`
+- Uncomment and modify existing examples
+- Keep code clean and simple
+
+### For Advanced Patterns
+**DON'T duplicate code from AGENTS.md!** Instead:
+1. Reference the pattern: "See AGENTS.md Pattern 2 (lines 563-599)"
+2. Give brief implementation guidance
+3. Show how to uncomment relevant storage (messageCache, etc.)
+
+### For New Features
+1. Check AGENTS.md for existing patterns
+2. Check SDK features: `bun run check-versions`
+3. Use working examples from AGENTS.md
+4. Keep comments brief with references
+
+---
+
+## 📋 Event Handlers Quick Reference
+
+### Available Handlers
+```typescript
+bot.onMessage()           // All messages (primary handler)
+bot.onSlashCommand()      // /commands (see AGENTS.md line 108)
+bot.onTip()              // Crypto tips (see AGENTS.md line 302)
+bot.onReaction()         // Emoji reactions
+bot.onChannelJoin()      // User joins
+bot.onChannelLeave()     // User leaves
+bot.onMessageEdit()      // Message edits
+bot.onRedaction()        // Message deletions
+```
+
+**Full event payloads:** See AGENTS.md lines 44-527
+
+---
+
+## 🔧 Required Code Patterns
+
+### Bot Initialization
 ```typescript
 import { makeTownsBot } from '@towns-protocol/bot'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import commands from './commands.js'
 
-// STEP 1: Validate environment
+// Validate environment
 if (!process.env.APP_PRIVATE_DATA || !process.env.JWT_SECRET) {
   console.error('❌ Missing credentials!')
   process.exit(1)
 }
 
-// STEP 2: Create bot with commands
+// Create bot with commands
 const bot = await makeTownsBot(
   process.env.APP_PRIVATE_DATA.trim(),
   process.env.JWT_SECRET,
-  { commands } as any
+  { commands } as any  // REQUIRED!
 )
 
-// STEP 3: Message handler
+// Message handler
 bot.onMessage(async (handler, event) => {
-  const { message, userId, channelId, isMentioned } = event
-  
-  if (userId === bot.botId) return
-  
+  if (event.userId === bot.botId) return  // CRITICAL!
   try {
-    if (isMentioned) {
-      await handler.sendMessage(channelId, "Hello!")
-      return
-    }
-    
     // Your logic here
-    
   } catch (error) {
     console.error('Error:', error)
   }
 })
 
-// STEP 4: Server setup
+// Server setup
 const { jwtMiddleware, handler } = await bot.start()
 const app = new Hono()
 app.post('/webhook', jwtMiddleware, handler)
 app.get('/health', (c) => c.json({ status: 'ok', botId: bot.botId }))
-
 serve({ fetch: app.fetch, port: Number(process.env.PORT || 5123) })
 ```
 
-### Step 4: Build & Test
+### Slash Commands (New Feature!)
+```typescript
+// 1. Add to src/commands.ts
+export default [
+  { name: 'help', description: 'Show help' },
+  { name: 'stats', description: 'Show stats' }
+]
 
-```bash
-# Build
-bun run build
+// 2. Register handlers
+bot.onSlashCommand("help", async (handler, event) => {
+  await handler.sendMessage(event.channelId, "Help message")
+})
 
-# Verify dist/index.mjs exists
-ls -la dist/
-
-# Test build (only if .env configured)
-# bun run start
+// 3. Sync with Towns
+// npx towns-bot update-commands src/commands.ts <bearer-token>
 ```
 
-### Step 5: Deploy to Render
+### Permission Checks (New Feature!)
+```typescript
+// Uncomment: import { Permission } from '@towns-protocol/sdk'
 
-**Render Configuration:**
-1. Build Command: `bun install && bun run build`
-2. Start Command: `bun run start`
-3. Environment Variables:
-   - `APP_PRIVATE_DATA` = [from Towns Portal]
-   - `JWT_SECRET` = [from Towns Portal]
-   - `PORT` = `5123`
+// Check if user is admin
+const isAdmin = await handler.hasAdminPermission(event.userId, event.spaceId)
+
+// Check specific permission
+const canRedact = await handler.checkPermission(
+  event.channelId,
+  event.userId,
+  Permission.Redact
+)
+
+// Ban/unban (requires bot to have ModifyBanning permission)
+await handler.ban(userId, spaceId)
+await handler.unban(userId, spaceId)
+```
+
+**Full permission system:** See AGENTS.md lines 795-910
+
+### Tip Handlers (New Feature!)
+```typescript
+// Uncomment: import { parseEther } from 'viem'
+
+// Receive tips
+bot.onTip(async (handler, event) => {
+  if (event.receiverAddress === bot.botId) {
+    const ethAmount = Number(event.amount) / 1e18
+    await handler.sendMessage(event.channelId, `Thanks for ${ethAmount} ETH!`)
+  }
+})
+
+// Send tips
+await handler.tip({
+  to: event.userId,
+  amount: parseEther('0.001'),
+  messageId: event.eventId,
+  channelId: event.channelId,
+})
+```
+
+**Full tip API:** See AGENTS.md lines 331-499
+
+### Image Attachments
+```typescript
+await handler.sendMessage(channelId, "Here's an image", {
+  attachments: [{
+    type: 'image',
+    url: 'https://example.com/cat.png',
+    alt: 'Cute cat'
+  }]
+})
+```
+Framework auto-fetches, validates MIME type, measures dimensions, and encrypts.
+
+### Database (Bun SQLite)
+```typescript
+import { Database } from 'bun:sqlite'
+
+const db = new Database('bot.db')
+db.run('CREATE TABLE IF NOT EXISTS users (...)') // Use .run() NOT .exec()
+db.run('INSERT INTO users VALUES (?, ?)', [userId, data])
+const user = db.query('SELECT * FROM users WHERE id = ?').get(userId)
+```
+
+**IMPORTANT:** Use `db.run()` not `db.exec()` (deprecated)
+
+---
+
+## 🚀 Build & Deploy Workflow
+
+### Local Development
+```bash
+bun run build          # Build for production
+bun run start          # Run production build
+ls -la dist/           # Verify dist/index.mjs exists
+```
+
+### Deploy to Render.com
+1. **Build Command:** `bun install && bun run build`
+2. **Start Command:** `bun run start`
+3. **Environment Variables:**
+   - `APP_PRIVATE_DATA` (from Towns Portal - copy FULL key!)
+   - `JWT_SECRET` (from Towns Portal)
+   - `PORT=5123`
 
 **Deployment Order (CRITICAL!):**
 1. Push code to GitHub
 2. Create Render service
 3. Add environment variables
 4. Wait for "Your service is live 🎉"
-5. THEN set webhook in Towns Portal
+5. **THEN** set webhook in Towns Portal
 6. Webhook URL: `https://your-app.onrender.com/webhook`
 
-### Step 6: Towns Integration
-
-**After Render is running:**
+### Towns Portal Setup
 1. Go to https://app.alpha.towns.com/developer
 2. Your bot → Settings
-3. Webhook URL: `https://your-app.onrender.com/webhook`
+3. Set Webhook URL (AFTER Render is live!)
 4. Enable: All Messages, Mentions, Replies
 5. Save (webhook verification happens now)
 
 ---
 
-## Required Patterns
-
-### Bot Message Filtering (CRITICAL!)
-```typescript
-bot.onMessage(async (handler, event) => {
-  if (event.userId === bot.botId) return // Prevents infinite loops!
-  // ... rest of code
-})
-```
-
-### Mention Handling
-```typescript
-bot.onMessage(async (handler, event) => {
-  const { isMentioned, message, channelId } = event
-  
-  if (event.userId === bot.botId) return
-  
-  if (isMentioned) {
-    // Handle @bot mentions
-    await handler.sendMessage(channelId, "Response")
-    return
-  }
-})
-```
-
-### Database (if needed)
-```typescript
-import { Database } from 'bun:sqlite'
-
-const db = new Database('bot.db')
-db.run(`CREATE TABLE IF NOT EXISTS users (...)`) // Use .run() NOT .exec()
-db.run('INSERT INTO users VALUES (?, ?)', [userId, data])
-const user = db.query('SELECT * FROM users WHERE user_id = ?').get(userId)
-```
-
-### Error Handling
-```typescript
-try {
-  // Handler code
-} catch (error) {
-  console.error('Error:', error)
-}
-```
-
----
-
-## Common Errors
+## ❌ Common Errors & Fixes
 
 | Error | Fix |
 |-------|-----|
-| premature EOF | APP_PRIVATE_DATA incomplete - re-copy full key |
-| CANNOT_CALL_WEBHOOK | Missing `{ commands } as any` in makeTownsBot |
-| Property 'onMentioned' does not exist | Use `isMentioned` in onMessage |
-| db.exec is deprecated | Use `db.run()` instead |
+| `premature EOF` | APP_PRIVATE_DATA incomplete - re-copy full key, use `.trim()` |
+| `CANNOT_CALL_WEBHOOK` | Missing `{ commands } as any` in makeTownsBot |
+| `Property 'Permission' does not exist` | Uncomment: `import { Permission } from '@towns-protocol/sdk'` |
+| `db.exec is deprecated` | Use `db.run()` instead |
+| Slash commands not working | Run: `npx towns-bot update-commands src/commands.ts <token>` |
+| Bot responding to itself | Add: `if (event.userId === bot.botId) return` |
+| Lost context between events | Use persistent storage (Map, SQLite, Redis) |
+
+**Full troubleshooting:** See AGENTS.md lines 1296-1341
 
 ---
 
-## File Checklist
+## ✅ Pre-Deployment Checklist
 
-Before deployment, verify:
-- [ ] `src/commands.ts` exists
+- [ ] `src/commands.ts` exists and exported
 - [ ] Commands imported in `src/index.ts`
 - [ ] Bot init has `{ commands } as any`
-- [ ] Environment validation exists
+- [ ] Environment validation before bot init
 - [ ] All handlers have `if (userId === bot.botId) return`
-- [ ] All handlers have try-catch
+- [ ] All handlers have try-catch blocks
 - [ ] Database uses `db.run()` not `db.exec()`
 - [ ] Build succeeds: `bun run build`
 - [ ] `dist/index.mjs` exists after build
+- [ ] SDK is latest: `bun run check-versions`
 
 ---
 
-**Reference:** COMPLETE_KNOWLEDGE_BASE.md for all patterns and deployment steps.
+## 🎓 Best Practices for AI Agents
+
+### DO:
+✅ Reference AGENTS.md with line numbers
+✅ Use working examples from `src/index.ts`
+✅ Check SDK version before starting
+✅ Keep code clean with brief comments
+✅ Use try-catch in all handlers
+✅ Filter bot's own messages
+✅ Test build after changes
+
+### DON'T:
+❌ Hardcode SDK version numbers in docs
+❌ Duplicate large code blocks from AGENTS.md
+❌ Skip `{ commands } as any` in bot init
+❌ Forget to check `event.userId === bot.botId`
+❌ Use `db.exec()` (use `db.run()`)
+❌ Set webhook before Render is live
+❌ Skip version checks
+
+---
+
+## 🔗 External Resources
+
+- **Towns Developer Portal:** https://app.alpha.towns.com/developer
+- **AGENTS.md:** Comprehensive patterns and architecture guide
+- **COMPLETE_KNOWLEDGE_BASE.md:** Quick reference and deployment guide
+- **This repo:** All working examples in `src/index.ts`
+
+---
+
+**For any question, CHECK AGENTS.md FIRST!** It has every pattern, payload, and concept explained with line numbers for easy reference.
