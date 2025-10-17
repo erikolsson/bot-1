@@ -695,10 +695,12 @@ Current features:
 
       if (lowerMessage.includes("hyperliquid-setup")) {
         await handler.sendMessage(channelId, `hyperliquid-setup`);
+        return;
       }
 
       if (lowerMessage.includes("hyperliquid-trade")) {
         await handler.sendMessage(channelId, `hyperliquid-trade`);
+        return;
       }
 
       await handler.sendMessage(
