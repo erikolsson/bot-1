@@ -205,11 +205,6 @@ Mention me with "help" for this message.
         return;
       }
 
-      // Default mention response
-      await handler.sendMessage(
-        channelId,
-        `GM <@${userId}>! 👋 Mention me with "help" for more info!`
-      );
       return;
     }
 
