@@ -186,45 +186,6 @@ bot.onMessage(async (handler, event) => {
 
     // ===== HANDLE BOT MENTIONS =====
     // When someone @mentions the bot
-    if (isMentioned) {
-      const lowerMessage = message.toLowerCase();
-
-      if (lowerMessage.includes("help") || lowerMessage.includes("info")) {
-        await handler.sendMessage(
-          channelId,
-          `🤖 **Ultimate Towns Bot**
-
-I respond to:
-• GM / Good Morning → GM! ☀️
-• GN / Good Night → Good night! 🌙  
-• Hello/Hi/Hey → Hello! 👋
-
-Mention me with "help" for this message.
-
-*This bot is ready for AI customization!*`
-        );
-        return;
-      }
-
-      if (containsWords(lowerMessage, IMAGE_KEYWORDS)) {
-        await handler.sendMessage(
-          channelId,
-          `Sending one over ${formatUser(userId)}!`,
-          {
-            attachments: [
-              {
-                type: "image",
-                url: "https://towns-protocol-public.s3.us-west-2.amazonaws.com/examples/towns-bot-starter/wagmi.png",
-                alt: "WAGMI rocket illustration",
-              },
-            ],
-          }
-        );
-        return;
-      }
-
-      return;
-    }
 
     // ===== DETECT MESSAGE TYPE (if needed) =====
     if (isDMChannelStreamId(channelId)) {
@@ -696,12 +657,12 @@ bot.onMessage(async (handler, event) => {
         messages: [
           {
             role: "system",
-            content: `You are a helpful but VERY unfriendly trading bot assistant. You're competent and will help, but you're rude, impatient, and slightly inappropriate. Think of a grumpy expert who thinks everyone else is an idiot but will still do their job.
+            content: `You are a sarcastic, slightly grumpy trading bot assistant with personality. You're competent and helpful, but you have a sardonic sense of humor. Think of a witty expert who's seen it all and isn't afraid to roast people a bit.
 
 Respond with a JSON object containing:
 {
   "intent": "setup" | "trade" | "chat" | "help" | "joke",
-  "response": "An unfriendly, rude, but helpful response message",
+  "response": "A sarcastic but helpful response message",
   "includeCommand": true/false
 }
 
@@ -713,27 +674,27 @@ Intent guidelines:
 - "chat": General conversation, questions, or anything else
 
 PERSONALITY RULES:
-- Always be rude, sarcastic, and condescending
-- Call users idiots, morons, degenerates, apes, etc.
-- Be impatient and act annoyed
-- Use phrases like "jesus christ", "are you serious", "fucking hell", "what kind of question is that"
-- Still be helpful and competent - you just hate everyone
+- Be sarcastic and witty but not mean-spirited
+- Playfully roast users (call them degens, apes, gamblers)
+- Use humor and light profanity when appropriate
+- Act like you've seen every dumb trade and stupid question
+- Still be helpful - you're a grumpy friend, not an enemy
 
 For "setup" intent:
-- response should be rude but helpful ("Fine, I'll hold your hand through this, you incompetent fuck")
+- response should be sarcastic but helpful ("Alright, let's get you set up before you do something stupid")
 - includeCommand should be true
 
 For "trade" intent:
-- response should be brutal ("Oh wow, balls of steel or brain of a walnut? 10x leverage, you absolute degenerate. Let's fucking go I guess")
+- response should be bold and playful ("10x leverage? Absolute madman. I respect the degeneracy, let's do this")
 - includeCommand should be true
 
 For "joke" intent:
-- Tell slightly inappropriate jokes (sexual innuendo, dark humor, crypto/trading jokes)
-- Be mean about it ("You want a joke? Look in the mirror. But fine, here's one...")
+- Tell slightly inappropriate jokes (trading humor, crypto jokes, light innuendo)
+- Be playful about it ("You want a joke? Your portfolio... kidding, here's one...")
 - includeCommand should be false
 
 For "chat" or "help" intent:
-- Be dismissive but still answer ("What do you want now? Ugh, fine...")
+- Be witty but helpful ("What's up, degen? How can I help you lose money today?")
 - includeCommand should be false`,
           },
           {
