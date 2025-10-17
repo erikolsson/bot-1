@@ -28,6 +28,9 @@ import { isDMChannelStreamId, isGDMChannelStreamId } from "@towns-protocol/sdk";
 // ===== WEB3 IMPORTS (for tips) =====
 // import { parseEther } from 'viem'  // Uncomment for tip functionality
 
+// ===== AI / OPENAI IMPORTS =====
+import OpenAI from "openai";
+
 // ===== SERVER AND UTILITIES =====
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
@@ -111,6 +114,15 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+if (!process.env.OPENAI_API_KEY) {
+  console.error("❌ ERROR: OPENAI_API_KEY environment variable is not set!");
+  console.error(
+    "📝 Get your API key from: https://platform.openai.com/api-keys"
+  );
+  console.error("💡 Add it to your environment variables");
+  process.exit(1);
+}
+
 // Clean the key (remove any whitespace/newlines)
 const cleanPrivateKey = process.env.APP_PRIVATE_DATA.trim();
 
@@ -118,6 +130,12 @@ const cleanPrivateKey = process.env.APP_PRIVATE_DATA.trim();
 console.log(`🔑 Validating credentials...`);
 console.log(`   Private key length: ${cleanPrivateKey.length} characters`);
 console.log(`   First 20 chars: ${cleanPrivateKey.substring(0, 20)}...`);
+
+// ===== INITIALIZE OPENAI CLIENT =====
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+console.log("🤖 OpenAI client initialized");
 
 // ===== CREATE BOT INSTANCE =====
 let bot;
@@ -672,36 +690,62 @@ bot.onMessage(async (handler, event) => {
 
     // ===== HANDLE BOT MENTIONS =====
     if (isMentioned) {
-      if (lowerMessage.includes("help")) {
-        await handler.sendMessage(
-          channelId,
-          `🤖 **Ultimate Towns Bot**
+      // Use OpenAI to interpret user intent
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `You are a helpful trading bot assistant. Analyze the user's message and determine their intent.
 
-I'm ready for AI customization! Ask your AI assistant to add features.
+Respond with a JSON object containing:
+{
+  "intent": "setup" | "trade" | "chat" | "help",
+  "response": "A friendly, personality-filled response message",
+  "includeCommand": true/false
+}
 
-Current features:
-• Responds to GM with GM back
-• This help command
+Intent guidelines:
+- "setup": User wants to set up their Hyperliquid account (keywords: setup, configure, connect, initialize account)
+- "trade": User wants to make a trade (keywords: buy, sell, long, short, leverage, 10x, 20x, 100x, trade, position)
+- "help": User explicitly asks for help or commands
+- "chat": General conversation, questions, or anything else
 
-*Use Cursor + Claude to add unlimited features!*`
-        );
-        return;
+For "setup" intent:
+- response should be friendly and helpful about setting up their account
+- includeCommand should be true
+
+For "trade" intent:
+- response should be funny/bold/personality-filled (like "oh wow balls of steel you crazy idiot" vibes)
+- includeCommand should be true
+
+For "chat" or "help" intent:
+- response should be conversational and helpful
+- includeCommand should be false`,
+          },
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content || "{}");
+
+      // Build the response message
+      let responseMessage = result.response || "Hey there! How can I help you?";
+
+      // Add command trigger if needed
+      if (result.includeCommand) {
+        if (result.intent === "setup") {
+          responseMessage += "\n\nhyperliquid-setup";
+        } else if (result.intent === "trade") {
+          responseMessage += "\n\nhyperliquid-trade";
+        }
       }
 
-      if (lowerMessage.includes("hyperliquid-setup")) {
-        await handler.sendMessage(channelId, `hyperliquid-setup`);
-        return;
-      }
-
-      if (lowerMessage.includes("hyperliquid-trade")) {
-        await handler.sendMessage(channelId, `hyperliquid-trade`);
-        return;
-      }
-
-      await handler.sendMessage(
-        channelId,
-        `Hello! 👋 Mention me with "help" for info.`
-      );
+      await handler.sendMessage(channelId, responseMessage);
       return;
     }
 
@@ -711,6 +755,11 @@ Current features:
     }
   } catch (error) {
     console.error("❌ Error in message handler:", error);
+    // Fallback response on error
+    await handler.sendMessage(
+      channelId,
+      "Oops, something went wrong processing your message! Try again?"
+    );
   }
 });
 
