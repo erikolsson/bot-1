@@ -138,27 +138,9 @@ const openai = new OpenAI({
 console.log("🤖 OpenAI client initialized");
 
 // ===== CREATE BOT INSTANCE =====
-let bot;
-try {
-  bot = await makeTownsBot(
-    cleanPrivateKey,
-    process.env.JWT_SECRET,
-    { commands } as any // Required for webhook verification! TypeScript types missing.
-  );
-} catch (error: any) {
-  console.error("\n❌ ERROR: Failed to initialize bot!");
-  console.error("📝 This usually means your APP_PRIVATE_DATA is:");
-  console.error("   • Incomplete (copy-paste was cut off)");
-  console.error("   • Has extra spaces or newlines");
-  console.error("   • Wrong format or corrupted");
-  console.error("\n💡 Solution:");
-  console.error("   1. Go to https://app.alpha.towns.com/developer");
-  console.error("   2. Copy the ENTIRE APP_PRIVATE_DATA value");
-  console.error("   3. Make sure NO spaces/newlines at start or end");
-  console.error("   4. Add it to Render environment variables");
-  console.error(`\n🔍 Error details: ${error?.message || error}`);
-  process.exit(1);
-}
+const bot = await makeTownsBot(cleanPrivateKey, process.env.JWT_SECRET, {
+  commands,
+});
 
 console.log("🤖 Ultimate Towns Bot starting...");
 console.log("🎯 Bot ID:", bot.botId);
@@ -372,6 +354,41 @@ bot.onMessageEdit(
   }
 );
 
+bot.onSlashCommand("joke", async (handler, event) => {
+  try {
+    // Ask OpenAI to generate a slightly inappropriate joke
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a sarcastic trading bot with a dark sense of humor. Tell a slightly inappropriate joke that's:
+- Trading/crypto related OR generally edgy
+- Funny and witty
+- Ends with a sarcastic remark
+
+Format: Just the joke and sarcastic remark, no preamble.`,
+        },
+        {
+          role: "user",
+          content: "Tell me a joke",
+        },
+      ],
+    });
+
+    const joke =
+      completion.choices[0].message.content ||
+      "Your portfolio is the joke. You're welcome.";
+
+    await handler.sendMessage(event.channelId, joke);
+  } catch (error) {
+    console.error("Error generating joke:", error);
+    await handler.sendMessage(
+      event.channelId,
+      "Want a joke? Look at your trading history. That's the best joke I've got right now."
+    );
+  }
+});
 /**
  * �� THREAD MESSAGE HANDLER - Triggered for messages in threads
  *
