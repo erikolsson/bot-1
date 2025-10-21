@@ -2,7 +2,163 @@ syntax = "proto3";
 
 package bot;
 
-// Hello World message definition
-message HelloWorld {
-  string message = 1;
+// ============================================================================
+// Core Message Types
+// ============================================================================
+
+// Main message wrapper sent from bot to channel
+message BotMessage {
+  string id = 1;  // Unique message ID for tracking interactions
+
+  oneof content {
+    TextMessage text = 2;
+    InteractiveMessage interactive = 3;
+    ActionRequest action_request = 4;
+  }
+
+  optional MessageMetadata metadata = 10;
+}
+
+// Response from user back to bot
+message UserResponse {
+  string message_id = 1;    // References original BotMessage.id
+  string component_id = 2;  // Which component was interacted with
+  string user_id = 3;       // User who responded
+
+  oneof data {
+    ButtonClick button_click = 4;
+    SignatureResponse signature = 5;
+    TransactionResponse transaction = 6;
+  }
+}
+
+// Simple text message
+message TextMessage {
+  string text = 1;
+  optional bool ephemeral = 2;  // Hidden from other users
+}
+
+// ============================================================================
+// Interactive Components
+// ============================================================================
+
+// Message with interactive components
+message InteractiveMessage {
+  string text = 1;
+  repeated ActionRow rows = 2;
+  optional bool ephemeral = 3;
+}
+
+// Container for components (max 5 per row)
+message ActionRow {
+  repeated Component components = 1;
+}
+
+// Generic component wrapper for extensibility
+message Component {
+  oneof type {
+    Button button = 1;
+    // Future: SelectMenu select_menu = 2;
+    // Future: TextInput text_input = 3;
+  }
+}
+
+// Button component
+message Button {
+  string id = 1;                // Custom ID for tracking clicks
+  string label = 2;              // Button text
+  ButtonStyle style = 3;         // Visual style
+  optional string emoji = 4;     // Optional emoji
+  optional bool disabled = 5;    // Disabled state
+  optional string url = 6;       // External link (makes button non-interactive)
+}
+
+enum ButtonStyle {
+  PRIMARY = 0;    // Blue
+  SECONDARY = 1;  // Gray
+  SUCCESS = 2;    // Green
+  DANGER = 3;     // Red
+  LINK = 4;       // Gray with link icon
+}
+
+// ============================================================================
+// Blockchain Actions
+// ============================================================================
+
+// Request for blockchain action from user
+message ActionRequest {
+  string id = 1;
+  string text = 2;
+
+  oneof action {
+    SignatureRequest signature_request = 3;
+    TransactionRequest transaction_request = 4;
+  }
+
+  optional bool ephemeral = 10;
+}
+
+// Request user to sign data
+message SignatureRequest {
+  string data = 1;                    // Data to sign (hex encoded)
+  string chain_id = 2;                // Chain identifier (e.g., "1" for Ethereum mainnet)
+  optional string message = 3;        // Human-readable message to display
+  optional SignatureType type = 4;    // Type of signature requested
+  optional string title = 5;          // Title for the signature request dialog
+  optional string subtitle = 6;       // Subtitle/description for the signature request
+}
+
+enum SignatureType {
+  PERSONAL_SIGN = 0;     // eth_sign / personal_sign
+  TYPED_DATA = 1;        // EIP-712 typed data
+  MESSAGE = 2;           // Plain text message
+}
+
+// Request user to send transaction
+message TransactionRequest {
+  string to = 1;                      // Recipient address
+  string value = 2;                   // Amount in wei/smallest unit
+  optional string data = 3;           // Contract call data (hex)
+  string chain_id = 4;                // Chain to execute on
+  optional string token_address = 5;  // For ERC20 token transfers
+  optional string gas_limit = 6;      // Suggested gas limit
+  optional string description = 7;    // Human-readable description
+}
+
+// ============================================================================
+// User Response Types
+// ============================================================================
+
+// User clicked a button
+message ButtonClick {
+  int64 timestamp = 1;  // When clicked
+  // Can be extended with more metadata
+}
+
+// User signed data
+message SignatureResponse {
+  string signature = 1;        // Hex encoded signature
+  string signer = 2;           // Address that signed
+  string chain_id = 3;         // Chain the signature is for
+}
+
+// User sent transaction
+message TransactionResponse {
+  string tx_hash = 1;          // Transaction hash
+  string from = 2;             // Sender address
+  string chain_id = 3;         // Chain the tx was sent on
+  optional string error = 4;   // Error message if failed
+  optional string status = 5;  // pending/confirmed/failed
+}
+
+// ============================================================================
+// Metadata
+// ============================================================================
+
+// Optional metadata for messages
+message MessageMetadata {
+  int64 timestamp = 1;
+  optional int64 expires_at = 2;  // Message expiration time
+  optional string thread_id = 3;   // For threaded conversations
+  optional string reply_to = 4;    // Reply to another message
 }

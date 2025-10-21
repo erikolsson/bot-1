@@ -38,6 +38,16 @@ import { Hono } from "hono";
 // ===== BOT COMMANDS (REQUIRED!) =====
 import commands from "./commands.js";
 
+// ===== PROTOCOL HELPERS =====
+import {
+  createSignatureRequest,
+  serializeMessage,
+  serializeMessageToBytes,
+  parseUserResponse,
+  sendProtocolMessage,
+  PROTOCOL_TYPE_URLS
+} from "./protocol-helpers.js";
+
 // ===== OPTIONAL IMPORTS (uncomment as needed) =====
 // import { readFileSync } from 'fs'           // For reading files
 // import { join } from 'path'                 // For file paths
@@ -79,6 +89,15 @@ import commands from "./commands.js";
 // const messageCache = new Map<string, any>()    // Store messages for context
 // const userWorkflows = new Map<string, any>()   // Track multi-step user interactions
 // const threadContexts = new Map<string, any>()  // Track thread conversations
+
+// Storage for tracking signature requests
+const pendingSignatures = new Map<string, {
+  messageId: string,
+  requestedBy: string,
+  data: string,
+  chainId: string,
+  timestamp: number
+}>()
 
 // ===== BOT CONFIGURATION =====
 const config = {
@@ -390,8 +409,182 @@ Format: Just the joke and sarcastic remark, no preamble.`,
   }
 });
 
+/**
+ * 🔏 SIGNATURE REQUEST DEMO - Test signature request protocol
+ * Demonstrates how to request signatures from users using the new protocol
+ */
+bot.onSlashCommand("sign", async (handler, event) => {
+  // Example data to sign (could be a trade order, authentication, etc.)
+  const dataToSign = JSON.stringify({
+    action: "authenticate",
+    userId: event.userId,
+    timestamp: Date.now(),
+    nonce: Math.random().toString(36).substring(2, 15)
+  });
+
+  // Convert to hex for signing
+  const hexData = "0x" + Buffer.from(dataToSign).toString("hex");
+
+  // Create signature request using our protocol
+  const sigRequest = createSignatureRequest(
+    hexData,
+    "1", // Ethereum mainnet
+    {
+      title: "Authentication Request",
+      subtitle: "Sign to verify your identity",
+      message: "Please sign this message to authenticate with the bot"
+    }
+  );
+
+  // Store the request for tracking
+  pendingSignatures.set(sigRequest.id, {
+    messageId: sigRequest.id,
+    requestedBy: event.userId,
+    data: hexData,
+    chainId: "1",
+    timestamp: Date.now()
+  });
+
+  try {
+    // Send the protocol message using our helper function
+    const eventId = await sendProtocolMessage(
+      handler,
+      event.channelId,
+      sigRequest,
+      PROTOCOL_TYPE_URLS.SIGNATURE_REQUEST
+    );
+
+    console.log("✅ Protocol message sent via raw GM:", {
+      eventId: eventId,
+      typeUrl: PROTOCOL_TYPE_URLS.SIGNATURE_REQUEST,
+      messageId: sigRequest.id,
+      bytesLength: serializeMessageToBytes(sigRequest).length
+    });
+
+    // Also send a human-readable message for visibility
+    await handler.sendMessage(
+      event.channelId,
+      `🔏 **Signature Request Sent**\n\n` +
+      `Requesting signature for authentication\n` +
+      `Message ID: \`${sigRequest.id}\`\n` +
+      `Chain: Ethereum Mainnet\n\n` +
+      `*Waiting for wallet signature...*`
+    );
+  } catch (error) {
+    console.error("❌ Failed to send raw GM:", error);
+    await handler.sendMessage(
+      event.channelId,
+      "❌ Failed to send signature request. Please try again."
+    );
+  }
+
+  console.log("📝 Signature request created:", {
+    id: sigRequest.id,
+    user: event.userId,
+    dataLength: hexData.length
+  });
+});
+
+/**
+ * 🔏 PROTOCOL MESSAGE HANDLER - Receives responses from client
+ *
+ * This handler receives protocol messages (signature responses, button clicks, etc.)
+ * from the client via the raw GM message channel.
+ *
+ * The event.message field contains a Uint8Array with the serialized protobuf data.
+ *
+ * FLOW:
+ * 1. Bot sends BotMessage via sendRawGM with typeUrl "bot.protocol.SignatureRequest"
+ * 2. Client receives raw GM, checks typeUrl, parses BotMessage protobuf
+ * 3. Client displays UI based on message content (signature dialog, buttons, etc.)
+ * 4. User interacts (signs, clicks button, etc.)
+ * 5. Client creates UserResponse protobuf, sends via sendRawGM
+ * 6. Bot receives here in onRawGmMessage, parses UserResponse
+ */
 bot.onRawGmMessage(async (handler, event) => {
-  console.log("👍 Raw GM message received:", event);
+  console.log("📨 Raw protocol message received");
+
+  try {
+    // event.message is a Uint8Array containing the protobuf data
+    const userResponse = parseUserResponse(event.message as Uint8Array);
+
+    if (!userResponse) {
+      console.log("⚠️ Could not parse protocol message");
+      return;
+    }
+
+    console.log("✅ Parsed user response:", {
+      messageId: userResponse.messageId,
+      componentId: userResponse.componentId,
+      userId: userResponse.userId,
+      dataType: userResponse.data.case
+    });
+
+    // Handle different response types
+    switch (userResponse.data.case) {
+      case 'signature':
+        const signature = userResponse.data.value;
+        const originalRequest = pendingSignatures.get(userResponse.messageId);
+
+        if (originalRequest) {
+          console.log("✅ Signature received:", {
+            signer: signature.signer,
+            signature: signature.signature,
+            chainId: signature.chainId,
+            originalData: originalRequest.data
+          });
+
+          // Verify the signature matches the expected signer
+          if (signature.signer.toLowerCase() === event.userId.toLowerCase()) {
+            await handler.sendMessage(
+              event.channelId,
+              `✅ **Signature Verified!**\n\n` +
+              `**Signer:** ${signature.signer}\n` +
+              `**Chain:** ${signature.chainId}\n` +
+              `**Signature:** \`${signature.signature.substring(0, 20)}...\`\n\n` +
+              `Authentication successful!`
+            );
+          } else {
+            await handler.sendMessage(
+              event.channelId,
+              `❌ **Signature Verification Failed**\n\n` +
+              `Expected signer: ${event.userId}\n` +
+              `Actual signer: ${signature.signer}`
+            );
+          }
+
+          // Clean up tracked request
+          pendingSignatures.delete(userResponse.messageId);
+        } else {
+          console.warn("⚠️ No matching signature request found for ID:", userResponse.messageId);
+        }
+        break;
+
+      case 'buttonClick':
+        // Handle button clicks (future implementation)
+        console.log("🔘 Button clicked:", {
+          componentId: userResponse.componentId,
+          timestamp: userResponse.data.value.timestamp
+        });
+        break;
+
+      case 'transaction':
+        // Handle transaction responses (future implementation)
+        const tx = userResponse.data.value;
+        console.log("💸 Transaction response:", {
+          txHash: tx.txHash,
+          from: tx.from,
+          chainId: tx.chainId,
+          status: tx.status
+        });
+        break;
+
+      default:
+        console.log("❓ Unknown response type:", userResponse.data.case);
+    }
+  } catch (error) {
+    console.error("❌ Error handling protocol message:", error);
+  }
 });
 
 /**

@@ -20,6 +20,10 @@ export default [
     name: "joke",
     description: "Tell a joke",
   },
+  {
+    name: "sign",
+    description: "Test signature request protocol",
+  },
   // Add your custom commands here
   // {
   //   name: 'stats',

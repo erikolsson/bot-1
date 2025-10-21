@@ -2,32 +2,666 @@
 // @generated from file bot-protocol.proto (package bot, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file bot-protocol.proto.
  */
 export const file_bot_protocol: GenFile = /*@__PURE__*/
-  fileDesc("ChJib3QtcHJvdG9jb2wucHJvdG8SA2JvdCIdCgpIZWxsb1dvcmxkEg8KB21lc3NhZ2UYASABKAliBnByb3RvMw");
+  fileDesc("ChJib3QtcHJvdG9jb2wucHJvdG8SA2JvdCLdAQoKQm90TWVzc2FnZRIKCgJpZBgBIAEoCRIgCgR0ZXh0GAIgASgLMhAuYm90LlRleHRNZXNzYWdlSAASLgoLaW50ZXJhY3RpdmUYAyABKAsyFy5ib3QuSW50ZXJhY3RpdmVNZXNzYWdlSAASLAoOYWN0aW9uX3JlcXVlc3QYBCABKAsyEi5ib3QuQWN0aW9uUmVxdWVzdEgAEisKCG1ldGFkYXRhGAogASgLMhQuYm90Lk1lc3NhZ2VNZXRhZGF0YUgBiAEBQgkKB2NvbnRlbnRCCwoJX21ldGFkYXRhItkBCgxVc2VyUmVzcG9uc2USEgoKbWVzc2FnZV9pZBgBIAEoCRIUCgxjb21wb25lbnRfaWQYAiABKAkSDwoHdXNlcl9pZBgDIAEoCRIoCgxidXR0b25fY2xpY2sYBCABKAsyEC5ib3QuQnV0dG9uQ2xpY2tIABIrCglzaWduYXR1cmUYBSABKAsyFi5ib3QuU2lnbmF0dXJlUmVzcG9uc2VIABIvCgt0cmFuc2FjdGlvbhgGIAEoCzIYLmJvdC5UcmFuc2FjdGlvblJlc3BvbnNlSABCBgoEZGF0YSJBCgtUZXh0TWVzc2FnZRIMCgR0ZXh0GAEgASgJEhYKCWVwaGVtZXJhbBgCIAEoCEgAiAEBQgwKCl9lcGhlbWVyYWwiZgoSSW50ZXJhY3RpdmVNZXNzYWdlEgwKBHRleHQYASABKAkSHAoEcm93cxgCIAMoCzIOLmJvdC5BY3Rpb25Sb3cSFgoJZXBoZW1lcmFsGAMgASgISACIAQFCDAoKX2VwaGVtZXJhbCIvCglBY3Rpb25Sb3cSIgoKY29tcG9uZW50cxgBIAMoCzIOLmJvdC5Db21wb25lbnQiMgoJQ29tcG9uZW50Eh0KBmJ1dHRvbhgBIAEoCzILLmJvdC5CdXR0b25IAEIGCgR0eXBlIqABCgZCdXR0b24SCgoCaWQYASABKAkSDQoFbGFiZWwYAiABKAkSHwoFc3R5bGUYAyABKA4yEC5ib3QuQnV0dG9uU3R5bGUSEgoFZW1vamkYBCABKAlIAIgBARIVCghkaXNhYmxlZBgFIAEoCEgBiAEBEhAKA3VybBgGIAEoCUgCiAEBQggKBl9lbW9qaUILCglfZGlzYWJsZWRCBgoEX3VybCLFAQoNQWN0aW9uUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgR0ZXh0GAIgASgJEjIKEXNpZ25hdHVyZV9yZXF1ZXN0GAMgASgLMhUuYm90LlNpZ25hdHVyZVJlcXVlc3RIABI2ChN0cmFuc2FjdGlvbl9yZXF1ZXN0GAQgASgLMhcuYm90LlRyYW5zYWN0aW9uUmVxdWVzdEgAEhYKCWVwaGVtZXJhbBgKIAEoCEgBiAEBQggKBmFjdGlvbkIMCgpfZXBoZW1lcmFsIsYBChBTaWduYXR1cmVSZXF1ZXN0EgwKBGRhdGEYASABKAkSEAoIY2hhaW5faWQYAiABKAkSFAoHbWVzc2FnZRgDIAEoCUgAiAEBEiUKBHR5cGUYBCABKA4yEi5ib3QuU2lnbmF0dXJlVHlwZUgBiAEBEhIKBXRpdGxlGAUgASgJSAKIAQESFQoIc3VidGl0bGUYBiABKAlIA4gBAUIKCghfbWVzc2FnZUIHCgVfdHlwZUIICgZfdGl0bGVCCwoJX3N1YnRpdGxlItsBChJUcmFuc2FjdGlvblJlcXVlc3QSCgoCdG8YASABKAkSDQoFdmFsdWUYAiABKAkSEQoEZGF0YRgDIAEoCUgAiAEBEhAKCGNoYWluX2lkGAQgASgJEhoKDXRva2VuX2FkZHJlc3MYBSABKAlIAYgBARIWCglnYXNfbGltaXQYBiABKAlIAogBARIYCgtkZXNjcmlwdGlvbhgHIAEoCUgDiAEBQgcKBV9kYXRhQhAKDl90b2tlbl9hZGRyZXNzQgwKCl9nYXNfbGltaXRCDgoMX2Rlc2NyaXB0aW9uIiAKC0J1dHRvbkNsaWNrEhEKCXRpbWVzdGFtcBgBIAEoAyJIChFTaWduYXR1cmVSZXNwb25zZRIRCglzaWduYXR1cmUYASABKAkSDgoGc2lnbmVyGAIgASgJEhAKCGNoYWluX2lkGAMgASgJIoQBChNUcmFuc2FjdGlvblJlc3BvbnNlEg8KB3R4X2hhc2gYASABKAkSDAoEZnJvbRgCIAEoCRIQCghjaGFpbl9pZBgDIAEoCRISCgVlcnJvchgEIAEoCUgAiAEBEhMKBnN0YXR1cxgFIAEoCUgBiAEBQggKBl9lcnJvckIJCgdfc3RhdHVzIpYBCg9NZXNzYWdlTWV0YWRhdGESEQoJdGltZXN0YW1wGAEgASgDEhcKCmV4cGlyZXNfYXQYAiABKANIAIgBARIWCgl0aHJlYWRfaWQYAyABKAlIAYgBARIVCghyZXBseV90bxgEIAEoCUgCiAEBQg0KC19leHBpcmVzX2F0QgwKCl90aHJlYWRfaWRCCwoJX3JlcGx5X3RvKkwKC0J1dHRvblN0eWxlEgsKB1BSSU1BUlkQABINCglTRUNPTkRBUlkQARILCgdTVUNDRVNTEAISCgoGREFOR0VSEAMSCAoETElOSxAEKj8KDVNpZ25hdHVyZVR5cGUSEQoNUEVSU09OQUxfU0lHThAAEg4KClRZUEVEX0RBVEEQARILCgdNRVNTQUdFEAJiBnByb3RvMw");
 
 /**
- * Hello World message definition
+ * Main message wrapper sent from bot to channel
  *
- * @generated from message bot.HelloWorld
+ * @generated from message bot.BotMessage
  */
-export type HelloWorld = Message<"bot.HelloWorld"> & {
+export type BotMessage = Message<"bot.BotMessage"> & {
   /**
-   * @generated from field: string message = 1;
+   * Unique message ID for tracking interactions
+   *
+   * @generated from field: string id = 1;
    */
-  message: string;
+  id: string;
+
+  /**
+   * @generated from oneof bot.BotMessage.content
+   */
+  content: {
+    /**
+     * @generated from field: bot.TextMessage text = 2;
+     */
+    value: TextMessage;
+    case: "text";
+  } | {
+    /**
+     * @generated from field: bot.InteractiveMessage interactive = 3;
+     */
+    value: InteractiveMessage;
+    case: "interactive";
+  } | {
+    /**
+     * @generated from field: bot.ActionRequest action_request = 4;
+     */
+    value: ActionRequest;
+    case: "actionRequest";
+  } | { case: undefined; value?: undefined };
+
+  /**
+   * @generated from field: optional bot.MessageMetadata metadata = 10;
+   */
+  metadata?: MessageMetadata;
 };
 
 /**
- * Describes the message bot.HelloWorld.
- * Use `create(HelloWorldSchema)` to create a new message.
+ * Describes the message bot.BotMessage.
+ * Use `create(BotMessageSchema)` to create a new message.
  */
-export const HelloWorldSchema: GenMessage<HelloWorld> = /*@__PURE__*/
+export const BotMessageSchema: GenMessage<BotMessage> = /*@__PURE__*/
   messageDesc(file_bot_protocol, 0);
+
+/**
+ * Response from user back to bot
+ *
+ * @generated from message bot.UserResponse
+ */
+export type UserResponse = Message<"bot.UserResponse"> & {
+  /**
+   * References original BotMessage.id
+   *
+   * @generated from field: string message_id = 1;
+   */
+  messageId: string;
+
+  /**
+   * Which component was interacted with
+   *
+   * @generated from field: string component_id = 2;
+   */
+  componentId: string;
+
+  /**
+   * User who responded
+   *
+   * @generated from field: string user_id = 3;
+   */
+  userId: string;
+
+  /**
+   * @generated from oneof bot.UserResponse.data
+   */
+  data: {
+    /**
+     * @generated from field: bot.ButtonClick button_click = 4;
+     */
+    value: ButtonClick;
+    case: "buttonClick";
+  } | {
+    /**
+     * @generated from field: bot.SignatureResponse signature = 5;
+     */
+    value: SignatureResponse;
+    case: "signature";
+  } | {
+    /**
+     * @generated from field: bot.TransactionResponse transaction = 6;
+     */
+    value: TransactionResponse;
+    case: "transaction";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message bot.UserResponse.
+ * Use `create(UserResponseSchema)` to create a new message.
+ */
+export const UserResponseSchema: GenMessage<UserResponse> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 1);
+
+/**
+ * Simple text message
+ *
+ * @generated from message bot.TextMessage
+ */
+export type TextMessage = Message<"bot.TextMessage"> & {
+  /**
+   * @generated from field: string text = 1;
+   */
+  text: string;
+
+  /**
+   * Hidden from other users
+   *
+   * @generated from field: optional bool ephemeral = 2;
+   */
+  ephemeral?: boolean;
+};
+
+/**
+ * Describes the message bot.TextMessage.
+ * Use `create(TextMessageSchema)` to create a new message.
+ */
+export const TextMessageSchema: GenMessage<TextMessage> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 2);
+
+/**
+ * Message with interactive components
+ *
+ * @generated from message bot.InteractiveMessage
+ */
+export type InteractiveMessage = Message<"bot.InteractiveMessage"> & {
+  /**
+   * @generated from field: string text = 1;
+   */
+  text: string;
+
+  /**
+   * @generated from field: repeated bot.ActionRow rows = 2;
+   */
+  rows: ActionRow[];
+
+  /**
+   * @generated from field: optional bool ephemeral = 3;
+   */
+  ephemeral?: boolean;
+};
+
+/**
+ * Describes the message bot.InteractiveMessage.
+ * Use `create(InteractiveMessageSchema)` to create a new message.
+ */
+export const InteractiveMessageSchema: GenMessage<InteractiveMessage> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 3);
+
+/**
+ * Container for components (max 5 per row)
+ *
+ * @generated from message bot.ActionRow
+ */
+export type ActionRow = Message<"bot.ActionRow"> & {
+  /**
+   * @generated from field: repeated bot.Component components = 1;
+   */
+  components: Component[];
+};
+
+/**
+ * Describes the message bot.ActionRow.
+ * Use `create(ActionRowSchema)` to create a new message.
+ */
+export const ActionRowSchema: GenMessage<ActionRow> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 4);
+
+/**
+ * Generic component wrapper for extensibility
+ *
+ * @generated from message bot.Component
+ */
+export type Component = Message<"bot.Component"> & {
+  /**
+   * @generated from oneof bot.Component.type
+   */
+  type: {
+    /**
+     * Future: SelectMenu select_menu = 2;
+     * Future: TextInput text_input = 3;
+     *
+     * @generated from field: bot.Button button = 1;
+     */
+    value: Button;
+    case: "button";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message bot.Component.
+ * Use `create(ComponentSchema)` to create a new message.
+ */
+export const ComponentSchema: GenMessage<Component> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 5);
+
+/**
+ * Button component
+ *
+ * @generated from message bot.Button
+ */
+export type Button = Message<"bot.Button"> & {
+  /**
+   * Custom ID for tracking clicks
+   *
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * Button text
+   *
+   * @generated from field: string label = 2;
+   */
+  label: string;
+
+  /**
+   * Visual style
+   *
+   * @generated from field: bot.ButtonStyle style = 3;
+   */
+  style: ButtonStyle;
+
+  /**
+   * Optional emoji
+   *
+   * @generated from field: optional string emoji = 4;
+   */
+  emoji?: string;
+
+  /**
+   * Disabled state
+   *
+   * @generated from field: optional bool disabled = 5;
+   */
+  disabled?: boolean;
+
+  /**
+   * External link (makes button non-interactive)
+   *
+   * @generated from field: optional string url = 6;
+   */
+  url?: string;
+};
+
+/**
+ * Describes the message bot.Button.
+ * Use `create(ButtonSchema)` to create a new message.
+ */
+export const ButtonSchema: GenMessage<Button> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 6);
+
+/**
+ * Request for blockchain action from user
+ *
+ * @generated from message bot.ActionRequest
+ */
+export type ActionRequest = Message<"bot.ActionRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string text = 2;
+   */
+  text: string;
+
+  /**
+   * @generated from oneof bot.ActionRequest.action
+   */
+  action: {
+    /**
+     * @generated from field: bot.SignatureRequest signature_request = 3;
+     */
+    value: SignatureRequest;
+    case: "signatureRequest";
+  } | {
+    /**
+     * @generated from field: bot.TransactionRequest transaction_request = 4;
+     */
+    value: TransactionRequest;
+    case: "transactionRequest";
+  } | { case: undefined; value?: undefined };
+
+  /**
+   * @generated from field: optional bool ephemeral = 10;
+   */
+  ephemeral?: boolean;
+};
+
+/**
+ * Describes the message bot.ActionRequest.
+ * Use `create(ActionRequestSchema)` to create a new message.
+ */
+export const ActionRequestSchema: GenMessage<ActionRequest> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 7);
+
+/**
+ * Request user to sign data
+ *
+ * @generated from message bot.SignatureRequest
+ */
+export type SignatureRequest = Message<"bot.SignatureRequest"> & {
+  /**
+   * Data to sign (hex encoded)
+   *
+   * @generated from field: string data = 1;
+   */
+  data: string;
+
+  /**
+   * Chain identifier (e.g., "1" for Ethereum mainnet)
+   *
+   * @generated from field: string chain_id = 2;
+   */
+  chainId: string;
+
+  /**
+   * Human-readable message to display
+   *
+   * @generated from field: optional string message = 3;
+   */
+  message?: string;
+
+  /**
+   * Type of signature requested
+   *
+   * @generated from field: optional bot.SignatureType type = 4;
+   */
+  type?: SignatureType;
+
+  /**
+   * Title for the signature request dialog
+   *
+   * @generated from field: optional string title = 5;
+   */
+  title?: string;
+
+  /**
+   * Subtitle/description for the signature request
+   *
+   * @generated from field: optional string subtitle = 6;
+   */
+  subtitle?: string;
+};
+
+/**
+ * Describes the message bot.SignatureRequest.
+ * Use `create(SignatureRequestSchema)` to create a new message.
+ */
+export const SignatureRequestSchema: GenMessage<SignatureRequest> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 8);
+
+/**
+ * Request user to send transaction
+ *
+ * @generated from message bot.TransactionRequest
+ */
+export type TransactionRequest = Message<"bot.TransactionRequest"> & {
+  /**
+   * Recipient address
+   *
+   * @generated from field: string to = 1;
+   */
+  to: string;
+
+  /**
+   * Amount in wei/smallest unit
+   *
+   * @generated from field: string value = 2;
+   */
+  value: string;
+
+  /**
+   * Contract call data (hex)
+   *
+   * @generated from field: optional string data = 3;
+   */
+  data?: string;
+
+  /**
+   * Chain to execute on
+   *
+   * @generated from field: string chain_id = 4;
+   */
+  chainId: string;
+
+  /**
+   * For ERC20 token transfers
+   *
+   * @generated from field: optional string token_address = 5;
+   */
+  tokenAddress?: string;
+
+  /**
+   * Suggested gas limit
+   *
+   * @generated from field: optional string gas_limit = 6;
+   */
+  gasLimit?: string;
+
+  /**
+   * Human-readable description
+   *
+   * @generated from field: optional string description = 7;
+   */
+  description?: string;
+};
+
+/**
+ * Describes the message bot.TransactionRequest.
+ * Use `create(TransactionRequestSchema)` to create a new message.
+ */
+export const TransactionRequestSchema: GenMessage<TransactionRequest> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 9);
+
+/**
+ * User clicked a button
+ *
+ * @generated from message bot.ButtonClick
+ */
+export type ButtonClick = Message<"bot.ButtonClick"> & {
+  /**
+   * When clicked
+   *
+   * @generated from field: int64 timestamp = 1;
+   */
+  timestamp: bigint;
+};
+
+/**
+ * Describes the message bot.ButtonClick.
+ * Use `create(ButtonClickSchema)` to create a new message.
+ */
+export const ButtonClickSchema: GenMessage<ButtonClick> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 10);
+
+/**
+ * User signed data
+ *
+ * @generated from message bot.SignatureResponse
+ */
+export type SignatureResponse = Message<"bot.SignatureResponse"> & {
+  /**
+   * Hex encoded signature
+   *
+   * @generated from field: string signature = 1;
+   */
+  signature: string;
+
+  /**
+   * Address that signed
+   *
+   * @generated from field: string signer = 2;
+   */
+  signer: string;
+
+  /**
+   * Chain the signature is for
+   *
+   * @generated from field: string chain_id = 3;
+   */
+  chainId: string;
+};
+
+/**
+ * Describes the message bot.SignatureResponse.
+ * Use `create(SignatureResponseSchema)` to create a new message.
+ */
+export const SignatureResponseSchema: GenMessage<SignatureResponse> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 11);
+
+/**
+ * User sent transaction
+ *
+ * @generated from message bot.TransactionResponse
+ */
+export type TransactionResponse = Message<"bot.TransactionResponse"> & {
+  /**
+   * Transaction hash
+   *
+   * @generated from field: string tx_hash = 1;
+   */
+  txHash: string;
+
+  /**
+   * Sender address
+   *
+   * @generated from field: string from = 2;
+   */
+  from: string;
+
+  /**
+   * Chain the tx was sent on
+   *
+   * @generated from field: string chain_id = 3;
+   */
+  chainId: string;
+
+  /**
+   * Error message if failed
+   *
+   * @generated from field: optional string error = 4;
+   */
+  error?: string;
+
+  /**
+   * pending/confirmed/failed
+   *
+   * @generated from field: optional string status = 5;
+   */
+  status?: string;
+};
+
+/**
+ * Describes the message bot.TransactionResponse.
+ * Use `create(TransactionResponseSchema)` to create a new message.
+ */
+export const TransactionResponseSchema: GenMessage<TransactionResponse> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 12);
+
+/**
+ * Optional metadata for messages
+ *
+ * @generated from message bot.MessageMetadata
+ */
+export type MessageMetadata = Message<"bot.MessageMetadata"> & {
+  /**
+   * @generated from field: int64 timestamp = 1;
+   */
+  timestamp: bigint;
+
+  /**
+   * Message expiration time
+   *
+   * @generated from field: optional int64 expires_at = 2;
+   */
+  expiresAt?: bigint;
+
+  /**
+   * For threaded conversations
+   *
+   * @generated from field: optional string thread_id = 3;
+   */
+  threadId?: string;
+
+  /**
+   * Reply to another message
+   *
+   * @generated from field: optional string reply_to = 4;
+   */
+  replyTo?: string;
+};
+
+/**
+ * Describes the message bot.MessageMetadata.
+ * Use `create(MessageMetadataSchema)` to create a new message.
+ */
+export const MessageMetadataSchema: GenMessage<MessageMetadata> = /*@__PURE__*/
+  messageDesc(file_bot_protocol, 13);
+
+/**
+ * @generated from enum bot.ButtonStyle
+ */
+export enum ButtonStyle {
+  /**
+   * Blue
+   *
+   * @generated from enum value: PRIMARY = 0;
+   */
+  PRIMARY = 0,
+
+  /**
+   * Gray
+   *
+   * @generated from enum value: SECONDARY = 1;
+   */
+  SECONDARY = 1,
+
+  /**
+   * Green
+   *
+   * @generated from enum value: SUCCESS = 2;
+   */
+  SUCCESS = 2,
+
+  /**
+   * Red
+   *
+   * @generated from enum value: DANGER = 3;
+   */
+  DANGER = 3,
+
+  /**
+   * Gray with link icon
+   *
+   * @generated from enum value: LINK = 4;
+   */
+  LINK = 4,
+}
+
+/**
+ * Describes the enum bot.ButtonStyle.
+ */
+export const ButtonStyleSchema: GenEnum<ButtonStyle> = /*@__PURE__*/
+  enumDesc(file_bot_protocol, 0);
+
+/**
+ * @generated from enum bot.SignatureType
+ */
+export enum SignatureType {
+  /**
+   * eth_sign / personal_sign
+   *
+   * @generated from enum value: PERSONAL_SIGN = 0;
+   */
+  PERSONAL_SIGN = 0,
+
+  /**
+   * EIP-712 typed data
+   *
+   * @generated from enum value: TYPED_DATA = 1;
+   */
+  TYPED_DATA = 1,
+
+  /**
+   * Plain text message
+   *
+   * @generated from enum value: MESSAGE = 2;
+   */
+  MESSAGE = 2,
+}
+
+/**
+ * Describes the enum bot.SignatureType.
+ */
+export const SignatureTypeSchema: GenEnum<SignatureType> = /*@__PURE__*/
+  enumDesc(file_bot_protocol, 1);
 
