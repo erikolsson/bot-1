@@ -389,6 +389,11 @@ Format: Just the joke and sarcastic remark, no preamble.`,
     );
   }
 });
+
+bot.onRawGmMessage(async (handler, event) => {
+  console.log("👍 Raw GM message received:", event);
+});
+
 /**
  * �� THREAD MESSAGE HANDLER - Triggered for messages in threads
  *

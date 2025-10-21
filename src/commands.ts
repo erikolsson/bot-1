@@ -26,3 +26,15 @@ export default [
   //   description: 'Show server statistics',
   // },
 ];
+
+/*
+
+  {
+    name: "trade"
+    description: "ask for a trade idea",
+  },
+  
+  // example: "i want to buy ethereum for 200 usdc"
+
+
+*/

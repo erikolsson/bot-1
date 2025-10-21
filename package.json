@@ -12,19 +12,23 @@
     "check-versions": "./check-versions.sh",
     "update-sdk": "bun update @towns-protocol/bot @towns-protocol/sdk && bun install",
     "setup": "./check-versions.sh && bun install",
-    "deploy": "bun run build && echo '✅ Ready for Render deployment'"
+    "deploy": "bun run build && echo '✅ Ready for Render deployment'",
+    "proto:generate": "buf generate"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.10.0",
     "@hono/node-server": "^1.14.0",
-    "@towns-protocol/bot": "0.0.367",
-    "@towns-protocol/sdk": "0.0.367",
+    "@towns-protocol/bot": "0.0.376",
+    "@towns-protocol/sdk": "0.0.376",
     "hono": "^4.7.11",
     "openai": "^6.4.0"
   },
   "devDependencies": {
+    "@bufbuild/buf": "^1.59.0",
+    "@bufbuild/protoc-gen-es": "^2.10.0",
     "@types/bun": "latest",
-    "@types/node": "^20.0.0",
-    "esbuild": "^0.19.0",
+    "@types/node": "24.9.1",
+    "esbuild": "0.25.11",
     "typescript": "^5.0.0"
   },
   "keywords": [
