@@ -30,9 +30,5 @@ COPY --from=build /app/package.json ./
 # Expose port (Cloud Run will set PORT env var)
 EXPOSE 5123
 
-# Health check (optional but recommended)
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD bun run -e "fetch('http://localhost:' + (process.env.PORT || 5123) + '/health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
-
 # Run the bot using the start script
 CMD ["bun", "run", "start"]
