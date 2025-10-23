@@ -10,6 +10,12 @@ To build a bot, you need:
 3. **Event handlers** - Functions that respond to Towns events
 4. **Deployment environment** - Server to host the webhook endpoint
 
+build the bot with:
+$ bun install && bun run build
+
+to run the bot locally:
+$ bun run start
+
 ## Critical Architecture Concepts
 
 ### STATELESS EVENT PROCESSING - MOST IMPORTANT
