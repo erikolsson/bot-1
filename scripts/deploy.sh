@@ -1,13 +1,27 @@
 #!/bin/bash
 
 # Towns Bot - GCP Cloud Run Deployment Script
-# This script deploys the bot to Cloud Run with secrets from Secret Manager
+# This script builds Docker image locally and deploys to Cloud Run
 
 set -e  # Exit on error
 
 echo "🚀 Towns Bot - GCP Cloud Run Deployment"
 echo "========================================"
 echo ""
+
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "❌ Error: Docker is not installed"
+    echo "Install from: https://docs.docker.com/get-docker/"
+    exit 1
+fi
+
+# Check if Docker daemon is running
+if ! docker info &> /dev/null; then
+    echo "❌ Error: Docker daemon is not running"
+    echo "Please start Docker Desktop or Docker service"
+    exit 1
+fi
 
 # Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then
@@ -95,19 +109,45 @@ echo ""
 
 # Enable required APIs
 echo "📦 Enabling required GCP APIs..."
-gcloud services enable cloudbuild.googleapis.com --quiet
 gcloud services enable run.googleapis.com --quiet
+gcloud services enable artifactregistry.googleapis.com --quiet
 echo "   ✅ APIs enabled"
 echo ""
 
-# Build and deploy
-echo "🏗️  Building and deploying to Cloud Run..."
+# Configure Docker to use gcloud credentials
+echo "🔐 Configuring Docker authentication..."
+gcloud auth configure-docker --quiet
+echo "   ✅ Docker authenticated"
 echo ""
-echo "This may take 3-5 minutes..."
+
+# Define image name
+IMAGE_NAME="gcr.io/$PROJECT_ID/$SERVICE_NAME"
+IMAGE_TAG="$IMAGE_NAME:latest"
+
+# Build Docker image locally
+echo "🏗️  Building Docker image locally..."
+echo "   Image: $IMAGE_TAG"
+echo "   Platform: linux/amd64 (Cloud Run compatible)"
+echo ""
+
+docker build --platform linux/amd64 -t "$IMAGE_TAG" .
+
+echo ""
+echo "   ✅ Docker image built successfully"
+echo ""
+
+# Push image to Google Container Registry
+echo "📤 Pushing image to Google Container Registry..."
+docker push "$IMAGE_TAG"
+echo "   ✅ Image pushed successfully"
+echo ""
+
+# Deploy to Cloud Run
+echo "🚀 Deploying to Cloud Run..."
 echo ""
 
 gcloud run deploy "$SERVICE_NAME" \
-    --source . \
+    --image "$IMAGE_TAG" \
     --platform managed \
     --region "$REGION" \
     --allow-unauthenticated \
